@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLang, useCart, useWishlist } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { MuseWearLogo } from "./Logo";
 import { useState, useEffect } from "react";
 
@@ -8,6 +9,7 @@ export default function Navbar() {
   const { lang, toggle, t } = useLang();
   const { count } = useCart();
   const { count: wishCount } = useWishlist();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -61,7 +63,21 @@ export default function Navbar() {
               <span className="text-xl">🛒</span>
               {count > 0 && <span className="absolute -top-0 -right-0 bg-black text-white text-[10px] w-5 h-5 grid place-items-center rounded-full animate-scaleIn">{count}</span>}
             </Link>
-            <Link href="/admin" className="hidden lg:inline-flex bg-black text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-zinc-800 hover:scale-105 transition">
+            {user ? (
+              <Link href="/account" className="hidden sm:inline-flex bg-black text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-zinc-800 transition">
+                {user.name.split(" ")[0]}
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="hidden sm:inline-flex border border-zinc-300 px-4 py-2 rounded-full font-semibold text-xs hover:border-black hover:bg-black hover:text-white transition">
+                  {t("Sign In", "دخول")}
+                </Link>
+                <Link href="/signup" className="hidden lg:inline-flex bg-black text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-zinc-800 hover:scale-105 transition">
+                  {t("Sign Up", "تسجيل")}
+                </Link>
+              </>
+            )}
+            <Link href="/admin" className="hidden lg:inline-flex border border-black px-3 py-2 rounded-full font-semibold text-xs hover:bg-black hover:text-white transition">
               {t("Dashboard", "لوحة التحكم")}
             </Link>
             <div className="hidden sm:flex items-center gap-1 text-xs font-semibold border-l pl-3 ml-1">

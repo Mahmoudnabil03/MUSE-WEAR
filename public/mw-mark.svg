@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
+ <!-- Background white -->
+ <!-- Top M shape -->
+ <path d="M10 10 L100 75 L190 10 L190 125 L170 135 L170 45 L100 105 L30 45 L30 135 L10 125 Z" fill="black"/>
+ <!-- Bottom W shape -->
+ <path d="M10 138 L30 148 L30 150 L80 45 L80 45 L80 45 L60 150 L30 148 L10 138 Z" opacity="0"/>
+ <!-- Actual bottom W -->
+ <path d="M10 135 L30 145 L55 155 L60 125 L80 110 L80 160 L100 180 L120 160 L120 110 L140 125 L145 155 L170 145 L190 135 L190 150 L145 180 L100 210 L55 180 L10 150 Z" fill="black"/>
+ <!-- Inner white M -->
+ <path d="M52 55 L52 145 L65 152 L70 105 L95 85 L100 100 L105 85 L130 105 L135 152 L148 145 L148 55 L100 85 Z" fill="white"/>
+</svg>

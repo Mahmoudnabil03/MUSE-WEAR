@@ -88,11 +88,11 @@ export default function Home() {
           </div>
           <div className="flex gap-3 mt-3 overflow-x-auto no-scrollbar">
             {brands.map((b, i) => (
-              <div key={b} className={`shrink-0 border px-6 py-3 text-sm font-black tracking-wide transition hover:scale-105 ${b === "MUSE WEAR" ? "bg-black text-white border-black shadow" : "bg-white border-zinc-300 hover:border-black"}`} style={{ animation: `fadeInUp 0.5s ease ${i * 50}ms both` }}>
+              <Link key={b} href={b === "MUSE WEAR" ? "/men?filter=muse" : `/search?q=${encodeURIComponent(b)}`} className={`shrink-0 border px-6 py-3 text-sm font-black tracking-wide transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black ${b === "MUSE WEAR" ? "bg-black text-white border-black shadow" : "bg-white border-zinc-300 hover:border-black"}`} style={{ animation: `fadeInUp 0.5s ease ${i * 50}ms both` }}>
                 {b}
-              </div>
+              </Link>
             ))}
-            <div className="shrink-0 bg-zinc-900 text-white px-6 py-3 text-sm font-bold">+ {t("More", "المزيد")}</div>
+            <Link href="/search" className="shrink-0 bg-zinc-900 text-white px-6 py-3 text-sm font-bold hover:bg-black">+ {t("More", "المزيد")}</Link>
           </div>
         </div>
       </section>

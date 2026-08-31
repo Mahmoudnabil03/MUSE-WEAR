@@ -10,10 +10,17 @@ const LangContext = createContext<{ lang: Lang; toggle: () => void; t: (en: stri
   t: (en) => en,
 });
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("muse-lang") as Lang | null;
+      if (saved === "en" || saved === "ar") return saved;
+    }
+    return "en";
+  });
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    localStorage.setItem("muse-lang", lang);
   }, [lang]);
   const toggle = () => setLang((l) => (l === "en" ? "ar" : "en"));
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
@@ -26,8 +33,8 @@ export type CartItem = { product: Product; size?: string; qty: number };
 const CartContext = createContext<{
   items: CartItem[];
   add: (p: Product, size?: string) => void;
-  remove: (id: string) => void;
-  updateQty: (id: string, qty: number) => void;
+  remove: (id: string, size?: string) => void;
+  updateQty: (id: string, size: string | undefined, qty: number) => void;
   count: number;
   total: number;
   clear: () => void;
@@ -48,10 +55,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { product, size, qty: 1 }];
     });
   };
-  const remove = (id: string) => setItems((prev) => prev.filter((i) => i.product.id !== id));
-  const updateQty = (id: string, qty: number) => {
-    if (qty <= 0) return remove(id);
-    setItems((prev) => prev.map((i) => (i.product.id === id ? { ...i, qty } : i)));
+  const remove = (id: string, size?: string) => setItems((prev) => prev.filter((i) => !(i.product.id === id && i.size === size)));
+  const updateQty = (id: string, size: string | undefined, qty: number) => {
+    if (qty <= 0) return remove(id, size);
+    setItems((prev) => prev.map((i) => (i.product.id === id && i.size === size ? { ...i, qty } : i)));
   };
   const clear = () => setItems([]);
   const count = items.reduce((a, b) => a + b.qty, 0);

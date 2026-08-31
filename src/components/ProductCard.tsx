@@ -23,13 +23,14 @@ export default function ProductCard({ p, index = 0 }: { p: Product; index?: numb
         {p.isMuseMade && <span className="absolute top-2 right-2 bg-black text-white text-[10px] font-bold px-2 py-1 tracking-wide">MUSE</span>}
         {discount > 0 && <span className="absolute bottom-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 shadow">-{discount}%</span>}
         <button
+          aria-label={has(p.id) ? "Remove from wishlist" : "Add to wishlist"}
           onClick={(e) => {
             e.preventDefault();
             toggle(p.id);
           }}
-          className={`absolute top-2 w-8 h-8 grid place-items-center rounded-full bg-white/90 backdrop-blur border shadow-sm hover:scale-110 transition text-lg ${has(p.id) ? "text-red-600" : "text-zinc-700"} ${p.isMuseMade ? "right-2 top-8" : "right-2"}`}
+          className={`absolute top-2 w-8 h-8 grid place-items-center rounded-full bg-white/90 backdrop-blur border shadow-sm hover:scale-110 transition text-lg focus:outline-none focus:ring-2 focus:ring-black ${has(p.id) ? "text-red-600" : "text-zinc-700"} ${p.isMuseMade ? "right-2 top-8" : "right-2"}`}
         >
-          {has(p.id) ? "♥" : "♡"}
+          <span aria-hidden>{has(p.id) ? "♥" : "♡"}</span>
         </button>
         {/* Quick view bar */}
         <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition duration-300 bg-black text-white text-xs font-bold text-center py-2"> {t("Quick View", "نظرة سريعة")} </div>
@@ -48,7 +49,7 @@ export default function ProductCard({ p, index = 0 }: { p: Product; index?: numb
             <span key={c} className="w-4 h-4 rounded-full border border-zinc-200 shadow-inner" style={{ background: c }} />
           ))}
         </div>
-        <button onClick={() => add(p, p.sizes?.[0])} className="mt-3 w-full bg-black text-white text-sm font-semibold py-2 rounded-full hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition">
+        <button onClick={() => add(p, p.sizes?.[0])} aria-label={`Add ${name} to bag`} className="mt-3 w-full bg-black text-white text-sm font-semibold py-2 rounded-full hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
           {t("Add to Bag", "أضف للحقيبة")}
         </button>
       </div>

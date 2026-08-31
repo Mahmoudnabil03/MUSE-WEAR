@@ -1,23 +1,81 @@
 "use client";
 import ProductCard from "@/components/ProductCard";
-import { products } from "@/lib/products";
+import Breadcrumb from "@/components/Breadcrumb";
+import { products, brands } from "@/lib/products";
 import { useLang } from "@/lib/store";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function WomenPage() {
   const { t } = useLang();
   const [brand, setBrand] = useState("All");
-  const list = products.filter((p) => p.category === "women").filter((p) => (brand === "All" ? true : p.brand === brand));
+  const [sort, setSort] = useState("popular");
+  const [price, setPrice] = useState("all");
+  const [showMuse, setShowMuse] = useState(false);
+
+  const filtered = useMemo(() => {
+    let list = products.filter((p) => p.category === "women");
+    if (brand !== "All") list = list.filter((p) => p.brand === brand);
+    if (showMuse) list = list.filter((p) => p.isMuseMade);
+    if (price === "under1000") list = list.filter((p) => p.price < 1000);
+    else if (price === "1000-2000") list = list.filter((p) => p.price >= 1000 && p.price <= 2000);
+    else if (price === "over2000") list = list.filter((p) => p.price > 2000);
+    if (sort === "price-low") list = [...list].sort((a, b) => a.price - b.price);
+    else if (sort === "price-high") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "new") list = [...list].sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+    return list;
+  }, [brand, sort, price, showMuse]);
+
+  const catBrands = ["All", ...Array.from(new Set(products.filter((p) => p.category === "women").map((p) => p.brand)))];
+
   return (
     <div className="max-w-[1400px] mx-auto px-4 mt-6">
-      <h1 className="text-2xl font-black">{t("WOMEN", "نسائي")} <span className="text-zinc-400 font-normal text-sm">{list.length} {t("products", "منتج")}</span></h1>
-      <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar">
-        {["All", "MUSE WEAR", "Adidas"].map((b) => (
-          <button key={b} onClick={() => setBrand(b)} className={`px-4 py-2 rounded-full border text-sm font-semibold shrink-0 ${brand === b ? "bg-black text-white border-black" : "bg-white border-zinc-300"}`}>{b}</button>
-        ))}
+      <Breadcrumb items={[{ labelEn: "Women", labelAr: "نسائي" }]} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-3">
+        <h1 className="text-2xl font-black">{t("WOMEN", "نسائي")} <span className="text-zinc-400 font-normal text-sm">{filtered.length} {t("products", "منتج")}</span></h1>
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort-w" className="text-xs font-bold">{t("Sort by:", "ترتيب حسب:")}</label>
+          <select id="sort-w" value={sort} onChange={(e) => setSort(e.target.value)} className="border border-zinc-300 rounded-full px-3 py-2 text-sm focus:border-black focus:outline-none">
+            <option value="popular">{t("Popular", "الأكثر شعبية")}</option>
+            <option value="new">{t("New In", "الأحدث")}</option>
+            <option value="price-low">{t("Price: Low to High", "السعر: من الأقل")}</option>
+            <option value="price-high">{t("Price: High to Low", "السعر: من الأعلى")}</option>
+          </select>
+        </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-        {list.map((p) => <ProductCard key={p.id} p={p} />)}
+
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
+        {/* Filters - left rail like Namshi */}
+        <aside className="bg-white border border-zinc-200 rounded p-4 h-fit">
+          <h3 className="font-bold text-sm">{t("Filters", "الفلاتر")}</h3>
+          <div className="mt-3">
+            <div className="text-xs font-bold tracking-wide">{t("Brand", "الماركة")}</div>
+            <div className="mt-2 space-y-1">
+              {catBrands.map((b) => (
+                <button key={b} onClick={() => setBrand(b)} className={`w-full text-left px-2 py-1 rounded text-sm ${brand === b ? "bg-black text-white" : "hover:bg-zinc-100"}`}>{b}</button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="text-xs font-bold tracking-wide">{t("Price", "السعر")}</label>
+            <select value={price} onChange={(e) => setPrice(e.target.value)} className="mt-1 w-full border border-zinc-300 rounded px-2 py-2 text-sm">
+              <option value="all">{t("All prices", "كل الأسعار")}</option>
+              <option value="under1000">{t("Under 1000 EGP", "أقل من 1000")}</option>
+              <option value="1000-2000">1000 - 2000 EGP</option>
+              <option value="over2000">{t("Over 2000 EGP", "أكثر من 2000")}</option>
+            </select>
+          </div>
+          <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={showMuse} onChange={(e) => setShowMuse(e.target.checked)} /> MUSE Manufactured</label>
+          <button onClick={() => { setBrand("All"); setPrice("all"); setShowMuse(false); setSort("popular"); }} className="mt-4 w-full border border-zinc-300 rounded-full py-2 text-sm font-semibold hover:border-black">{t("Clear filters", "مسح الفلاتر")}</button>
+        </aside>
+
+        <div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            {catBrands.map((b) => (
+              <button key={b} onClick={() => setBrand(b)} className={`px-4 py-2 rounded-full border text-sm font-semibold shrink-0 focus:outline-none focus:ring-2 focus:ring-black ${brand === b ? "bg-black text-white border-black" : "bg-white border-zinc-300 hover:border-black"}`}>{b}</button>
+            ))}
+          </div>
+          {filtered.length === 0 ? <div className="text-center py-16 text-zinc-500">{t("No products match filters", "لا يوجد منتجات")} <button onClick={() => setBrand("All")} className="underline font-bold">{t("Clear", "مسح")}</button></div> : <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">{filtered.map((p, i) => <ProductCard key={p.id} p={p} index={i} />)}</div>}
+        </div>
       </div>
     </div>
   );

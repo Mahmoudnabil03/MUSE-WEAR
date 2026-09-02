@@ -1,8 +1,12 @@
 "use client";
 import { products, formatEGP } from "@/lib/products";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<"overview" | "catalog" | "ads" | "orders" | "firebase">("overview");
   const [firebaseUsers, setFirebaseUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -10,6 +14,8 @@ export default function AdminPage() {
   const [loadingFirestore, setLoadingFirestore] = useState(false);
   const [firestoreCollection, setFirestoreCollection] = useState("users");
   const [firebaseError, setFirebaseError] = useState("");
+  useEffect(() => { if (!loading && user?.role !== "admin") router.replace(user ? "/account" : "/login"); }, [loading, user, router]);
+  if (loading || user?.role !== "admin") return <div className="max-w-[600px] mx-auto px-4 py-16 text-center text-zinc-500">Checking admin access...</div>;
   const museCount = products.filter((p) => p.isMuseMade).length;
   const brandCount = products.filter((p) => !p.isMuseMade).length;
 

@@ -84,9 +84,9 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-            <Link href="/admin" className="hidden lg:inline-flex border border-black px-3 py-2 rounded-full font-semibold text-xs hover:bg-black hover:text-white transition focus:outline-none focus:ring-2 focus:ring-black">
+            {user?.role === "admin" && <Link href="/admin" className="hidden lg:inline-flex border border-black px-3 py-2 rounded-full font-semibold text-xs hover:bg-black hover:text-white transition focus:outline-none focus:ring-2 focus:ring-black">
               {t("Dashboard", "لوحة التحكم")}
-            </Link>
+            </Link>}
             <div className="hidden sm:flex items-center gap-1 text-xs font-semibold border-l pl-3 ml-1" aria-label="Currency">
               <span>EGP</span>
               <span className="text-zinc-400">|</span>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 export default function AccountPage() {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { t } = useLang();
   const router = useRouter();
 
@@ -17,7 +17,7 @@ export default function AccountPage() {
     }
   }, [user, router]);
 
-  if (!user) return <div className="max-w-[600px] mx-auto px-4 py-16 text-center"><p className="text-zinc-500">{t("Redirecting to login...", "جاري التحويل لتسجيل الدخول...")}</p></div>;
+  if (loading || !user) return <div className="max-w-[600px] mx-auto px-4 py-16 text-center"><p className="text-zinc-500">{t("Redirecting to login...", "جاري التحويل لتسجيل الدخول...")}</p></div>;
 
   return (
     <div className="max-w-[800px] mx-auto px-4 py-10">
@@ -34,7 +34,7 @@ export default function AccountPage() {
         {[
           ["Orders", "طلباتي", "/cart", "🛒"],
           ["Wishlist", "رغباتي", "/wishlist", "♡"],
-          ["Admin", "لوحة التحكم", "/admin", "⚙"],
+          ...(user.role === "admin" ? [["Admin", "لوحة التحكم", "/admin", "⚙"]] : []),
         ].map(([en, ar, href, icon]) => (
           <Link key={href} href={href} className="bg-white border border-zinc-200 rounded-2xl p-5 hover:border-black hover-lift transition">
             <div className="text-2xl">{icon}</div>

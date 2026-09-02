@@ -1,70 +1,23 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type User = { id: string; name: string; email: string; createdAt: string };
-type StoredUser = User & { password: string };
+export type User = { id: string; name: string; email: string; role: "customer" | "employee" | "admin"; createdAt: string };
+type AuthResult = { ok: boolean; error?: string };
+type AuthContextValue = { user: User | null; loading: boolean; login: (email: string, password: string) => Promise<AuthResult>; signup: (name: string, email: string, password: string) => Promise<AuthResult>; logout: () => Promise<void> };
+const AuthContext = createContext<AuthContextValue | null>(null);
 
-const AuthContext = createContext<{
-  user: User | null;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  signup: (name: string, email: string, password: string) => { ok: boolean; error?: string };
-  logout: () => void;
-} | null>(null);
-
-const USERS_KEY = "muse-users";
-const SESSION_KEY = "muse-session";
-
-function getUsers(): StoredUser[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); } catch { return []; }
+function mapUser(value: Record<string, string | undefined> | null): User | null {
+  if (!value) return null;
+  return { id: value.id!, name: value.full_name!, email: value.email!, role: value.role as User["role"], createdAt: value.created_at || new Date().toISOString() };
 }
-function saveUsers(u: StoredUser[]) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    try { const s = localStorage.getItem(SESSION_KEY); if (s) setUser(JSON.parse(s)); } catch {}
-  }, []);
-
-  const signup = (name: string, email: string, password: string) => {
-    const norm = email.toLowerCase().trim();
-    if (!name.trim()) return { ok: false, error: "Name is required" };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(norm)) return { ok: false, error: "Invalid email" };
-    if (password.length < 6) return { ok: false, error: "Password must be at least 6 characters" };
-    const users = getUsers();
-    if (users.find((u) => u.email === norm)) return { ok: false, error: "Email already registered" };
-    const newUser: StoredUser = { id: Date.now().toString(), name: name.trim(), email: norm, password, createdAt: new Date().toISOString() };
-    users.push(newUser);
-    saveUsers(users);
-    const session: User = { id: newUser.id, name: newUser.name, email: newUser.email, createdAt: newUser.createdAt };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
-    return { ok: true };
-  };
-
-  const login = (email: string, password: string) => {
-    const norm = email.toLowerCase().trim();
-    const users = getUsers();
-    const found = users.find((u) => u.email === norm);
-    if (!found) return { ok: false, error: "Account not found. Please sign up." };
-    if (found.password !== password) return { ok: false, error: "Incorrect password" };
-    const session: User = { id: found.id, name: found.name, email: found.email, createdAt: found.createdAt };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
-    return { ok: true };
-  };
-
-  const logout = () => {
-    localStorage.removeItem(SESSION_KEY);
-    setUser(null);
-  };
-
-  return <AuthContext.Provider value={{ user, login, signup, logout }}>{children}</AuthContext.Provider>;
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { fetch("/api/auth/me").then((res) => res.json()).then((data) => setUser(mapUser(data.user))).catch(() => setUser(null)).finally(() => setLoading(false)); }, []);
+  const login = async (email: string, password: string) => { const res = await fetch("/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password }) }); const data = await res.json(); if (!res.ok) return { ok: false, error: data.error }; setUser(mapUser(data.user)); return { ok: true }; };
+  const signup = async (name: string, email: string, password: string) => { const res = await fetch("/api/auth/signup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ fullName: name, email, password }) }); const data = await res.json(); if (!res.ok) return { ok: false, error: data.error }; setUser(mapUser(data.user)); return { ok: true }; };
+  const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); setUser(null); };
+  return <AuthContext.Provider value={{ user, loading, login, signup, logout }}>{children}</AuthContext.Provider>;
 }
-
-export const useAuth = () => {
-  const c = useContext(AuthContext);
-  if (!c) throw new Error("useAuth outside provider");
-  return c;
-};
+export const useAuth = () => { const context = useContext(AuthContext); if (!context) throw new Error("useAuth outside provider"); return context; };

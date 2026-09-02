@@ -20,16 +20,14 @@ export default function LoginPage() {
 
   if (user) return null;
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
     setLoading(true);
-    setTimeout(() => {
-      const res = login(email, password);
-      setLoading(false);
-      if (!res.ok) setErr(res.error || "Failed");
-      else router.push("/account");
-    }, 400);
+    const res = await login(email, password);
+    setLoading(false);
+    if (!res.ok) setErr(res.error || "Failed");
+    else router.push("/account");
   };
 
   return (
@@ -74,9 +72,6 @@ export default function LoginPage() {
             <div className="text-xs text-center text-zinc-500">{t("By signing in you agree to our Terms.", "بتسجيل الدخول توافق على الشروط.")}</div>
           </div>
 
-          <div className="mt-6 flex items-center gap-3 text-xs text-zinc-400">
-            <span className="flex-1 h-[1px] bg-zinc-200" /> {t("Demo: use any registered email", "تجريبي: استخدم أي إيميل مسجل")} <span className="flex-1 h-[1px] bg-zinc-200" />
-          </div>
         </form>
       </div>
     </div>

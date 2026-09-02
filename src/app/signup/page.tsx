@@ -20,16 +20,14 @@ export default function SignupPage() {
   useEffect(() => { if (user) router.replace("/account"); }, [user, router]);
   if (user) return null;
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
     setLoading(true);
-    setTimeout(() => {
-      const res = signup(name, email, password);
-      setLoading(false);
-      if (!res.ok) setErr(res.error || "Failed");
-      else router.push("/account");
-    }, 400);
+    const res = await signup(name, email, password);
+    setLoading(false);
+    if (!res.ok) setErr(res.error || "Failed");
+    else router.push("/account");
   };
 
   return (
@@ -54,12 +52,11 @@ export default function SignupPage() {
             <div>
               <div className="flex items-center justify-between"><label htmlFor="pw" className="text-xs font-bold tracking-wide">PASSWORD</label><button type="button" onClick={() => setShow(!show)} className="text-xs underline font-semibold">{show ? t("Hide", "إخفاء") : t("Show", "إظهار")}</button></div>
               <input id="pw" value={password} onChange={(e) => setPassword(e.target.value)} type={show ? "text" : "password"} required autoComplete="new-password" placeholder="••••••••" className="mt-1 w-full border border-zinc-300 rounded-full px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10 transition" />
-              <div className="text-xs text-zinc-400 mt-1">{t("Min 6 characters", "6 أحرف على الأقل")}</div>
+              <div className="text-xs text-zinc-400 mt-1">{t("8+ characters, one capital letter, and one number", "8 أحرف أو أكثر، حرف كبير ورقم")}</div>
             </div>
             <button disabled={loading} className="w-full bg-black text-white rounded-full py-3.5 font-black text-sm hover:bg-zinc-800 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
               {loading ? t("Creating...", "جاري الإنشاء...") : t("Create Account", "إنشاء حساب")}
             </button>
-            <div className="text-xs text-center text-zinc-500">{t("All data stored locally (demo) — ready to swap to Supabase Auth.", "البيانات محلياً (تجريبي) — جاهز للربط بـ Supabase.")}</div>
           </div>
         </form>
       </div>

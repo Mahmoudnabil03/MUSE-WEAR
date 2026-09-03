@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/store";
 import { MuseWearLogo } from "@/components/Logo";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 export default function SignupPage() {
   const { signup, user } = useAuth();
@@ -27,7 +28,10 @@ export default function SignupPage() {
     const res = await signup(name, email, password);
     setLoading(false);
     if (!res.ok) setErr(res.error || "Failed");
-    else router.push("/account");
+    else {
+      trackMetaEvent("CompleteRegistration", { content_name: "Customer account", status: "completed" });
+      router.push("/account");
+    }
   };
 
   return (

@@ -1,9 +1,10 @@
 "use client";
 import { useCart, useLang, useWishlist } from "@/lib/store";
-import { formatEGP } from "@/lib/products";
+import { formatEGP, getVariantStock } from "@/lib/products";
 import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumb";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 export default function CartPage() {
   const { items, updateQty, remove, total, count } = useCart();
@@ -11,8 +12,12 @@ export default function CartPage() {
   const { toggle: wishToggle } = useWishlist();
   const [coupon, setCoupon] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [validating, setValidating] = useState(false);
+  const shipping = total > 999 ? 0 : total ? 59 : 0;
+  const grand = Math.max(0, total + shipping - discount);
 
-  if (items.length === 0) return <div className="max-w-[1400px] mx-auto px-4 py-12 text-center"><h1 className="text-2xl font-black">{t("Your Bag is empty", "حقيبتك فارغة")}</h1><p className="text-sm text-zinc-500 mt-2">{t("Save items to wishlist or continue shopping", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="inline-block mt-4 bg-black text-white px-6 py-3 rounded-full font-bold focus:outline-none focus:ring-2 focus:ring-black">{t("Continue Shopping", "تابع التسوق")}</Link></div>;
+  if (items.length === 0) return <div className="max-w-[1400px] mx-auto px-4 py-12 text-center"><h1 className="text-2xl font-black">{t("Your Bag is empty", "حقيبتك فارغة")}</h1><p className="text-sm text-zinc-500 mt-2">{t("Save items to wishlist or continue shopping", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="inline-block mt-4 bg-black text-white px-6 py-3 rounded-full font-bold focus:outline-none focus:ring-2 focus:ring-black">{t("Continue Shopping", "تابع التسوق")}</Link><div className="mt-8 text-xs text-zinc-400">Cash on Delivery • Paymob • 14-day returns</div></div>;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 mt-6">
@@ -33,6 +38,7 @@ export default function CartPage() {
                   <Link href={`/product/${it.product.id}`} className="text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-black rounded">{lang === "ar" ? it.product.nameAr : it.product.nameEn}</Link>
                   <div className="text-xs text-zinc-500">Size: {it.size ?? t("One Size", "مقاس واحد")}</div>
                   <div className="font-bold mt-1">{formatEGP(it.product.price)}</div>
+                  {(() => { const s = getVariantStock(it.product, it.size); return s.status==="low" ? <div className="text-xs text-amber-600">{t(`Only ${s.stock} left — low stock`,`متبقي ${s.stock} فقط`)}</div> : s.status==="out" ? <div className="text-xs text-red-600 font-bold">{t("Out of stock","نفذ")}</div> : null; })()}
                   <div className="mt-2 flex items-center gap-2">
                     <button aria-label="Decrease quantity" onClick={() => updateQty(it.product.id, it.size, it.qty - 1)} className="w-8 h-8 border rounded hover:border-black focus:outline-none focus:ring-2 focus:ring-black">-</button>
                     <span className="w-8 text-center font-bold" aria-live="polite">{it.qty}</span>
@@ -49,16 +55,29 @@ export default function CartPage() {
         <div className="bg-white border border-zinc-200 p-6 h-fit rounded-2xl sticky top-[120px]">
           <h3 className="font-black">{t("Order Summary", "ملخص الطلب")}</h3>
           <div className="mt-3 flex gap-2">
-            <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder={t("Promo code", "كود الخصم")} aria-label="Promo code" className="flex-1 border border-zinc-300 rounded-full px-3 py-2 text-sm focus:border-black focus:outline-none" />
-            <button onClick={() => setCouponMsg(coupon ? t("Invalid code", "كود غير صالح") : "")} className="border border-black px-4 rounded-full text-sm font-bold hover:bg-black hover:text-white">{t("Apply", "تطبيق")}</button>
+            <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder={t("Promo code", "كود الخصم — WELCOME10")} aria-label="Promo code" className="flex-1 border border-zinc-300 rounded-full px-3 py-2 text-sm focus:border-black focus:outline-none uppercase" />
+            <button disabled={validating} onClick={async () => {
+              if (!coupon.trim()) { setCouponMsg(t("Enter code","أدخل الكود")); return; }
+              setValidating(true); setCouponMsg("");
+              try {
+                const r = await fetch("/api/discounts/validate", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ code: coupon.trim(), subtotal: total }) });
+                const j = await r.json();
+                if (j.valid) { setDiscount(j.discount.amount || 0); setCouponMsg(j.discount.free_shipping ? t("Free shipping applied","شحن مجاني") : t(`Discount ${formatEGP(j.discount.amount)} applied`,`خصم ${formatEGP(j.discount.amount)}`)); }
+                else { setDiscount(0); setCouponMsg(j.error || t("Invalid code","كود غير صالح")); }
+              } catch { setDiscount(0); setCouponMsg(t("Failed","فشل")); }
+              setValidating(false);
+            }} className="border border-black px-4 rounded-full text-sm font-bold hover:bg-black hover:text-white disabled:opacity-50">{validating?"...":t("Apply", "تطبيق")}</button>
           </div>
-          {couponMsg && <div className="text-xs text-red-600 mt-1">{couponMsg}</div>}
+          {couponMsg && <div className={`text-xs mt-1 ${couponMsg.includes("applied")||couponMsg.includes("شحن")?"text-green-600":"text-red-600"}`}>{couponMsg}</div>}
+          {discount>0 && <div className="text-xs text-green-600 font-bold">- {formatEGP(discount)} {t("discount","خصم")}</div>}
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><span>{t("Subtotal", "المجموع")}</span><span className="font-bold">{formatEGP(total)}</span></div>
-            <div className="flex justify-between"><span>{t("Shipping", "الشحن")}</span><span className="text-green-700 font-semibold">{total > 999 ? t("FREE", "مجاني") : formatEGP(59)}</span></div>
-            <div className="border-t pt-2 flex justify-between font-black text-base"><span>{t("Total", "الإجمالي")}</span><span>{formatEGP(total > 999 ? total : total + 59)}</span></div>
+            <div className="flex justify-between"><span>{t("Shipping", "الشحن")}</span><span className="text-green-700 font-semibold">{shipping===0 && total>0 ? t("FREE","مجاني") : formatEGP(shipping)}</span></div>
+            {discount>0 && <div className="flex justify-between text-green-600"><span>{t("Discount","الخصم")}</span><span>-{formatEGP(discount)}</span></div>}
+            <div className="border-t pt-2 flex justify-between font-black text-base"><span>{t("Total", "الإجمالي")}</span><span>{formatEGP(grand)}</span></div>
+            <div className="text-[11px] text-zinc-500">{total>0 && total<999 ? t(`Add ${formatEGP(999-total)} for FREE shipping` , `أضف ${formatEGP(999-total)} للشحن المجاني`) : t("Free shipping over 999 EGP — Cairo & Alexandria","شحن مجاني فوق 999")}</div>
           </div>
-          <Link href="/checkout" className="block text-center mt-6 bg-black text-white py-3.5 rounded-full font-bold hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black">{t("Proceed to Checkout", "المتابعة للدفع")}</Link>
+          <Link href={discount>0 ? `/checkout?coupon=${encodeURIComponent(coupon.trim())}` : "/checkout"} onClick={() => trackMetaEvent("InitiateCheckout", { content_ids: items.map((item) => item.product.id), content_type: "product", currency: "EGP", num_items: count, value: grand })} className="block text-center mt-6 bg-black text-white py-3.5 rounded-full font-bold hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black">{t("Proceed to Checkout", "المتابعة للدفع")}</Link>
           <div className="mt-3 text-xs text-center text-zinc-500">COD • Paymob (X-Pay) • 14-day returns • {t("Secure checkout", "دفع آمن")}</div>
         </div>
       </div>

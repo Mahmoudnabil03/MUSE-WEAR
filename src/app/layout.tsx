@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LanguageProvider, CartProvider, WishlistProvider } from "@/lib/store";
 import { AuthProvider } from "@/lib/auth";
+import MetaPixel from "@/components/MetaPixel";
 
 export const metadata: Metadata = {
   title: "MUSE WEAR | Cairo, Egypt - Multibrand Fashion",
@@ -14,6 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" dir="ltr" className="h-full">
       <body className="min-h-full flex flex-col bg-zinc-50 antialiased">
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         <LanguageProvider>
           <AuthProvider>
             <CartProvider>

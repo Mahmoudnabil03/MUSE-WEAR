@@ -1,0 +1,17 @@
+"use client";
+import ProductCard from "@/components/ProductCard";
+import Breadcrumb from "@/components/Breadcrumb";
+import { products } from "@/lib/products";
+import { useLang } from "@/lib/store";
+
+export default function SalePage() {
+  const { t } = useLang();
+  const list = products.filter((p) => p.originalPrice);
+  return (
+    <div className="max-w-[1400px] mx-auto px-4 mt-6">
+      <Breadcrumb items={[{ labelEn: "Sale", labelAr: "تخفيضات" }]} />
+      <h1 className="text-2xl font-black mt-3 text-red-600">SALE <span className="text-zinc-400 font-normal text-sm">{list.length} {t("products", "منتج")} — {t("Up to 50% off", "حتى 50% خصم")}</span></h1>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">{list.map((p,i)=><ProductCard key={p.id} p={p} index={i}/>)}</div>
+    </div>
+  );
+}

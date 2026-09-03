@@ -31,11 +31,12 @@ export default function Footer() {
         <div>
           <div className="text-white font-bold mb-3">Help</div>
           <ul className="space-y-2 text-zinc-400">
-            <li><Link href="/cart" className="hover:text-white">Shipping to all Egypt</Link></li>
-            <li><Link href="/cart" className="hover:text-white">Returns & Exchange (14 days)</Link></li>
+            <li><Link href="/track" className="hover:text-white">Track Order</Link></li>
+            <li><Link href="/shipping" className="hover:text-white">Shipping Policy</Link></li>
+            <li><Link href="/returns" className="hover:text-white">Returns & Exchange (14 days)</Link></li>
             <li><Link href="/checkout" className="hover:text-white">Paymob / COD</Link></li>
-            <li><Link href="/account" className="hover:text-white">Track Order</Link></li>
-            <li><Link href="/admin" className="hover:text-white">Contact us</Link></li>
+            <li><Link href="/contact" className="hover:text-white">Contact us</Link></li>
+            <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
           </ul>
         </div>
         <div>

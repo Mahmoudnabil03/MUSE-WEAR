@@ -95,14 +95,14 @@ export default function Navbar() {
           </div>
         </div>
 
-        <nav aria-label="Main categories" className="flex gap-6 text-sm font-bold tracking-wide overflow-x-auto no-scrollbar border-t border-zinc-100 py-3">
+        <nav aria-label="Main categories" className="flex gap-5 text-sm font-bold tracking-wide overflow-x-auto no-scrollbar border-t border-zinc-100 py-3">
           <Link href="/women" className="whitespace-nowrap hover:text-black text-zinc-700 relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 hover:after:w-full after:bg-black after:transition-all focus:outline-none focus:ring-2 focus:ring-black rounded"> {t("WOMEN", "نسائي")} </Link>
           <Link href="/men" className="whitespace-nowrap hover:text-black text-zinc-700 relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 hover:after:w-full after:bg-black after:transition-all focus:outline-none focus:ring-2 focus:ring-black rounded"> {t("MEN", "رجالي")} </Link>
+          <Link href="/muse" className="whitespace-nowrap hover:text-black text-zinc-700 border border-black px-2 py-0.5 rounded-full text-xs tracking-widest focus:outline-none focus:ring-2 focus:ring-black"> {t("MUSE", "موس")} </Link>
+          <Link href="/brands" className="whitespace-nowrap hover:text-black text-zinc-700 focus:outline-none focus:ring-2 focus:ring-black rounded"> {t("BRANDS", "ماركات")} </Link>
           <Link href="/accessories" className="whitespace-nowrap hover:text-black text-zinc-700 relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 hover:after:w-full after:bg-black after:transition-all focus:outline-none focus:ring-2 focus:ring-black rounded"> {t("ACCESSORIES", "إكسسوارات")} </Link>
-          <span className="text-zinc-300" aria-hidden>|</span>
-          <Link href="/women?filter=new" className="whitespace-nowrap text-zinc-600 font-semibold hover:text-black"> {t("New In", "وصل حديثاً")} </Link>
-          <Link href="/men?filter=muse" className="whitespace-nowrap text-zinc-600 font-semibold hover:text-black"> {t("MUSE Manufactured", "صناعة موس")} </Link>
-          <Link href="/search?q=sale" className="bg-red-600 text-white px-2 py-0.5 rounded text-xs whitespace-nowrap animate-pulse hover:bg-red-700"> {t("SALE", "تخفيضات")} </Link>
+          <Link href="/new" className="whitespace-nowrap text-zinc-600 font-semibold hover:text-black focus:outline-none focus:ring-2 focus:ring-black rounded"> {t("NEW IN", "وصل حديثاً")} </Link>
+          <Link href="/sale" className="bg-red-600 text-white px-2.5 py-0.5 rounded text-xs whitespace-nowrap animate-pulse hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600"> {t("SALE", "تخفيضات")} </Link>
         </nav>
       </div>
     </header>

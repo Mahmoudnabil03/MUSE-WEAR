@@ -29,10 +29,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export const useLang = () => useContext(LangContext);
 
 // Cart
-export type CartItem = { product: Product; size?: string; qty: number };
+export type CartItem = { product: Product; size?: string; color?: string; qty: number };
 const CartContext = createContext<{
   items: CartItem[];
-  add: (p: Product, size?: string) => void;
+  add: (p: Product, size?: string, color?: string) => void;
   remove: (id: string, size?: string) => void;
   updateQty: (id: string, size: string | undefined, qty: number) => void;
   count: number;
@@ -48,17 +48,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useEffect(() => { localStorage.setItem("muse-cart", JSON.stringify(items)); }, [items]);
 
-  const add = (product: Product, size?: string) => {
+  const add = (product: Product, size?: string, color?: string) => {
     setItems((prev) => {
-      const idx = prev.findIndex((i) => i.product.id === product.id && i.size === size);
+      const keyColor = color || product.colors?.[0];
+      const idx = prev.findIndex((i) => i.product.id === product.id && i.size === size && i.color === keyColor);
       if (idx > -1) { const copy = [...prev]; copy[idx].qty += 1; return copy; }
-      return [...prev, { product, size, qty: 1 }];
+      return [...prev, { product, size, color: keyColor, qty: 1 }];
     });
   };
   const remove = (id: string, size?: string) => setItems((prev) => prev.filter((i) => !(i.product.id === id && i.size === size)));
   const updateQty = (id: string, size: string | undefined, qty: number) => {
     if (qty <= 0) return remove(id, size);
-    setItems((prev) => prev.map((i) => (i.product.id === id && i.size === size ? { ...i, qty } : i)));
+    // clamp to reasonable max to prevent abuse
+    const safe = Math.min(qty, 10);
+    setItems((prev) => prev.map((i) => (i.product.id === id && i.size === size ? { ...i, qty: safe } : i)));
   };
   const clear = () => setItems([]);
   const count = items.reduce((a, b) => a + b.qty, 0);

@@ -4,13 +4,18 @@ import { products } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import { useLang } from "@/lib/store";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 function SearchInner() {
   const sp = useSearchParams();
   const q = (sp.get("q") || "").toLowerCase();
   const { t } = useLang();
   const results = q ? products.filter((p) => `${p.nameEn} ${p.nameAr} ${p.brand} ${p.subcategory}`.toLowerCase().includes(q)) : [];
+  const resultIds = results.map((product) => product.id).join(",");
+  useEffect(() => {
+    if (q) trackMetaEvent("Search", { search_string: q, content_ids: resultIds ? resultIds.split(",") : [], content_type: "product" });
+  }, [q, resultIds]);
   return (
     <div className="max-w-[1400px] mx-auto px-4 mt-6">
       <Breadcrumb items={[{ labelEn: `Search: ${q}`, labelAr: `بحث: ${q}` }]} />

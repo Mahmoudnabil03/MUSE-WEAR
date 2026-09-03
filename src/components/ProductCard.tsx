@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Product, formatEGP } from "@/lib/products";
 import { useLang, useCart, useWishlist } from "@/lib/store";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 export default function ProductCard({ p, index = 0 }: { p: Product; index?: number }) {
   const { lang, t } = useLang();
@@ -26,6 +27,15 @@ export default function ProductCard({ p, index = 0 }: { p: Product; index?: numb
           aria-label={has(p.id) ? "Remove from wishlist" : "Add to wishlist"}
           onClick={(e) => {
             e.preventDefault();
+            if (!has(p.id)) {
+              trackMetaEvent("AddToWishlist", {
+                content_ids: [p.id],
+                content_name: p.nameEn,
+                content_type: "product",
+                currency: "EGP",
+                value: p.price,
+              });
+            }
             toggle(p.id);
           }}
           className={`absolute top-2 w-8 h-8 grid place-items-center rounded-full bg-white/90 backdrop-blur border shadow-sm hover:scale-110 transition text-lg focus:outline-none focus:ring-2 focus:ring-black ${has(p.id) ? "text-red-600" : "text-zinc-700"} ${p.isMuseMade ? "right-2 top-8" : "right-2"}`}
@@ -49,7 +59,16 @@ export default function ProductCard({ p, index = 0 }: { p: Product; index?: numb
             <span key={c} className="w-4 h-4 rounded-full border border-zinc-200 shadow-inner" style={{ background: c }} />
           ))}
         </div>
-        <button onClick={() => add(p, p.sizes?.[0])} aria-label={`Add ${name} to bag`} className="mt-3 w-full bg-black text-white text-sm font-semibold py-2 rounded-full hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+        <button onClick={() => {
+          add(p, p.sizes?.[0]);
+          trackMetaEvent("AddToCart", {
+            content_ids: [p.id],
+            content_name: p.nameEn,
+            content_type: "product",
+            currency: "EGP",
+            value: p.price,
+          });
+        }} aria-label={`Add ${name} to bag`} className="mt-3 w-full bg-black text-white text-sm font-semibold py-2 rounded-full hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
           {t("Add to Bag", "أضف للحقيبة")}
         </button>
       </div>

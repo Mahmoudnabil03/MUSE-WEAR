@@ -14,7 +14,21 @@ export type Product = {
   sizes?: string[];
   isNew?: boolean;
   isMuseMade?: boolean; // our manufacturing
+  stockQty?: number;
+  material?: string;
+  care?: string;
+  fit?: string;
+  sku?: string;
+  tags?: string[];
 };
+
+export function getVariantStock(p: Product, size?: string): { stock: number; status: "in" | "low" | "out" } {
+  const base = p.stockQty ?? 100;
+  // simple heuristic: if size-specific stock not tracked, use base
+  if (base <= 0) return { stock: 0, status: "out" };
+  if (base <= 3) return { stock: base, status: "low" };
+  return { stock: base, status: "in" };
+}
 
 export const products: Product[] = [
   {

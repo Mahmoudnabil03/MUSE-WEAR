@@ -22,16 +22,18 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 bg-white text-black px-3 py-1 rounded-full text-xs font-bold tracking-wide animate-fadeInUp">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> {t("NEW COLLECTION LIVE", "تشكيلة جديدة الآن")}
           </div>
-          <h2 className="text-4xl md:text-5xl font-black mt-3 leading-none animate-fadeInUp delay-100" style={{ animationFillMode: "backwards" }}>
-            {t("WOMEN", "نسائي")} <br />
-            <span className="bg-white text-black px-2">UP TO 50% OFF</span>
+          <div className="text-xs tracking-[0.3em] text-white/70 animate-fadeInUp">NEW SEASON / 2026</div>
+          <h2 className="text-4xl md:text-5xl font-black mt-2 leading-none animate-fadeInUp delay-100" style={{ animationFillMode: "backwards" }}>
+            MUSE<br />
+            <span className="bg-white text-black px-2">AFTER DARK</span>
           </h2>
           <p className="text-white/80 text-sm mt-3 max-w-md animate-fadeInUp delay-200" style={{ animationFillMode: "backwards" }}>
-            {t("Curated multibrand + MUSE manufactured essentials. Ships across Egypt — COD & Paymob.", "تشكيلة متعددة الماركات + أساسيات موس. شحن لكل مصر — COD و Paymob.")}
+            {t("Designed in Cairo. Made for everywhere.", "صمم في القاهرة. صنع لكل مكان.")}
           </p>
-          <span className="inline-flex items-center gap-2 mt-4 bg-white text-black px-7 py-3 rounded-full text-sm font-bold group-hover:gap-3 transition-all animate-fadeInUp delay-300" style={{ animationFillMode: "backwards" }}>
-            {t("Shop Women", "تسوقي نسائي")} <span>→</span>
-          </span>
+          <div className="flex gap-3 mt-4 animate-fadeInUp delay-300" style={{ animationFillMode: "backwards" }}>
+            <Link href="/women" className="bg-white text-black px-7 py-3 rounded-full text-sm font-bold hover:scale-105 transition">{t("SHOP WOMEN", "تسوقي نسائي")}</Link>
+            <Link href="/men" className="border border-white text-white px-7 py-3 rounded-full text-sm font-bold hover:bg-white hover:text-black transition">{t("SHOP MEN", "تسوق رجالي")}</Link>
+          </div>
         </div>
       </Link>
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/store";
 import { MuseWearLogo } from "@/components/Logo";
+import GoogleSignIn from "@/components/GoogleSignIn";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 
 export default function SignupPage() {
@@ -61,6 +62,7 @@ export default function SignupPage() {
             <button disabled={loading} className="w-full bg-black text-white rounded-full py-3.5 font-black text-sm hover:bg-zinc-800 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
               {loading ? t("Creating...", "جاري الإنشاء...") : t("Create Account", "إنشاء حساب")}
             </button>
+            <GoogleSignIn mode="signup" />
           </div>
         </form>
       </div>

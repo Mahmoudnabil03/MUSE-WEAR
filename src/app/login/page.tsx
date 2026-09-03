@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/store";
 import { MuseWearLogo } from "@/components/Logo";
+import GoogleSignIn from "@/components/GoogleSignIn";
 
 export default function LoginPage() {
   const { login, user } = useAuth();
@@ -69,6 +70,7 @@ export default function LoginPage() {
             <button disabled={loading} className="w-full bg-black text-white rounded-full py-3.5 font-black text-sm hover:bg-zinc-800 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
               {loading ? t("Signing in...", "جاري الدخول...") : t("Sign In", "دخول")}
             </button>
+            <GoogleSignIn mode="signin" />
             <div className="text-xs text-center text-zinc-500">{t("By signing in you agree to our Terms.", "بتسجيل الدخول توافق على الشروط.")}</div>
           </div>
 

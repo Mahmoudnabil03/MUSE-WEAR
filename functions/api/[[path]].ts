@@ -1,4 +1,4 @@
-interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string }
+interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string }
 interface D1Database { prepare(sql: string): D1PreparedStatement }
 interface D1PreparedStatement { bind(...values: unknown[]): D1PreparedStatement; first<T = unknown>(): Promise<T | null>; all<T = unknown>(): Promise<{ results: T[] }>; run(): Promise<unknown> }
 interface PagesContext { request: Request; env: Env; params: Record<string, string | string[] | undefined> }
@@ -159,6 +159,59 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
   if (path === "auth/logout" && request.method === "POST") { const session = parseCookies(request).muse_session; if (session) await env.DB.prepare("DELETE FROM sessions WHERE id=?").bind(session).run(); return new Response(null, { status: 204, headers: { "set-cookie": cookie("muse_session", "", 0) } }); }
   if (path === "auth/signup" && request.method === "POST") { const data = await body(request); const email = String(data.email || "").trim().toLowerCase(); const name = String(data.fullName || "").trim(); const password = String(data.password || ""); if (!name || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) return json({ error: "Enter a name, valid email, and password with 8+ characters, a capital letter, and a number." }, 400); const existing = await env.DB.prepare("SELECT id FROM users WHERE email=?").bind(email).first<{ id: string }>(); if (existing) return json({ error: "Email already registered." }, 409); try { const uid = id(); await env.DB.prepare("INSERT INTO users (id,email,password_hash,full_name) VALUES (?,?,?,?)").bind(uid, email, await hash(password), name).run(); const sid = id(); await env.DB.prepare("INSERT INTO sessions (id,user_id,expires_at) VALUES (?, ?, datetime('now','+30 days'))").bind(sid, uid).run(); return json({ user: { id: uid, email, full_name: name, role: "customer" } }, 201, { "set-cookie": cookie("muse_session", sid, 2592000) }); } catch (error) { console.error("signup failed", String(error)); return json({ error: "Unable to create account right now." }, 500); } }
   if (path === "auth/login" && request.method === "POST") { const data = await body(request); const found = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(String(data.email || "").trim().toLowerCase()).first<Record<string, unknown>>(); let valid = false; try { valid = Boolean(found && await verify(String(data.password || ""), String(found.password_hash))); } catch { valid = false; } if (!valid) return json({ error: "Invalid email or password." }, 401); const sid = id(); await env.DB.prepare("INSERT INTO sessions (id,user_id,expires_at) VALUES (?, ?, datetime('now','+30 days'))").bind(sid, found!.id).run(); await env.DB.prepare("UPDATE users SET last_login_at=datetime('now') WHERE id=?").bind(found!.id).run(); return json({ user: { id: found!.id, email: found!.email, full_name: found!.full_name, role: found!.role, created_at: found!.created_at } }, 200, { "set-cookie": cookie("muse_session", sid, 2592000) }); }
+  // --- Google OAuth (GSI ID token verification) ---
+  if (path === "auth/google" && request.method === "POST") {
+    const GOOGLE_CLIENT_ID = (env as Record<string, string | undefined>).GOOGLE_CLIENT_ID || (env as Record<string, string | undefined>).NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!GOOGLE_CLIENT_ID) return json({ error: "Google OAuth not configured. Set GOOGLE_CLIENT_ID in Cloudflare env." }, 503);
+    const data = await body(request);
+    const id_token = String(data.id_token || data.credential || "").trim();
+    if (!id_token) return json({ error: "Missing Google credential" }, 400);
+    // Verify via Google tokeninfo (works on Workers, no deps)
+    let payload: Record<string, unknown>;
+    try {
+      const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(id_token)}`);
+      const verifyJson = await verifyRes.json() as Record<string, unknown>;
+      if (!verifyRes.ok || verifyJson.aud !== GOOGLE_CLIENT_ID) return json({ error: "Invalid Google token", details: verifyJson }, 401);
+      if (String(verifyJson.email_verified) !== "true" && verifyJson.email_verified !== true) return json({ error: "Google email not verified" }, 401);
+      payload = verifyJson;
+    } catch (e) { return json({ error: "Google verification failed", details: String(e) }, 502); }
+    const email = String(payload.email || "").trim().toLowerCase();
+    const googleSub = String(payload.sub || "");
+    const fullName = String(payload.name || payload.given_name || email.split("@")[0] || "MUSE User");
+    const avatar = String(payload.picture || "");
+    if (!email || !googleSub) return json({ error: "Invalid Google payload" }, 401);
+    // Find or create user
+    let dbUser = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first<Record<string, unknown>>();
+    let userId: string;
+    if (dbUser) {
+      userId = String(dbUser.id);
+      // link google_id if missing
+      try { await env.DB.prepare("UPDATE users SET google_id=?, avatar_url=?, last_login_at=datetime('now') WHERE id=?").bind(googleSub, avatar || dbUser.avatar_url || null, userId).run(); } catch {}
+      dbUser = await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(userId).first<Record<string, unknown>>();
+    } else {
+      userId = id();
+      try {
+        await env.DB.prepare("INSERT INTO users (id, email, password_hash, full_name, google_id, avatar_url, role) VALUES (?,?,?,?,?,?,?)")
+          .bind(userId, email, "google_oauth", fullName, googleSub, avatar || null, "customer").run();
+        dbUser = await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(userId).first<Record<string, unknown>>();
+      } catch (e) {
+        // Fallback if google_id column not migrated yet
+        try {
+          await env.DB.prepare("INSERT INTO users (id, email, password_hash, full_name) VALUES (?,?,?,?)")
+            .bind(userId, email, "google_oauth", fullName).run();
+          dbUser = await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(userId).first<Record<string, unknown>>();
+        } catch (e2) { return json({ error: "Failed to create user", details: String(e2) }, 500); }
+      }
+    }
+    const sid = id();
+    await env.DB.prepare("INSERT INTO sessions (id,user_id,expires_at) VALUES (?, ?, datetime('now','+30 days'))").bind(sid, userId).run();
+    try { await env.DB.prepare("UPDATE users SET last_login_at=datetime('now') WHERE id=?").bind(userId).run(); } catch {}
+    return json({ user: { id: userId, email: String(dbUser?.email || email), full_name: String(dbUser?.full_name || fullName), role: String(dbUser?.role || "customer"), created_at: String(dbUser?.created_at || new Date().toISOString()) } }, 200, { "set-cookie": cookie("muse_session", sid, 2592000) });
+  }
+  if (path === "auth/google" && request.method === "GET") {
+    const clientId = (env as Record<string, string | undefined>).GOOGLE_CLIENT_ID || (env as Record<string, string | undefined>).NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+    return json({ configured: !!clientId, clientId: clientId ? clientId.slice(0,12)+"..." : null });
+  }
   if (path === "products" && request.method === "GET") { const rows = await env.DB.prepare("SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.is_active=1 ORDER BY p.created_at DESC").all<Record<string, unknown>>(); return json({ products: rows.results.map(product) }); }
   if (path === "products" && ["POST", "PUT", "DELETE"].includes(request.method)) { const current = await user(request, env); if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403); const data = await body(request); if (request.method === "POST") { const productId = id(); await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sale_price,sku,stock_qty,images,colors,sizes,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(productId, data.title, data.description || "", data.brand, data.categoryId || null, data.price, data.salePrice || null, data.sku, data.stockQty || 0, JSON.stringify(data.images || []), JSON.stringify(data.colors || []), JSON.stringify(data.sizes || []), data.isNew ? 1 : 0, data.isMuseMade ? 1 : 0).run(); return json({ id: productId }, 201); } const productId = String(data.id || ""); if (request.method === "DELETE") await env.DB.prepare("UPDATE products SET is_active=0, updated_at=datetime('now') WHERE id=?").bind(productId).run(); else await env.DB.prepare("UPDATE products SET title=?,description=?,brand=?,price=?,sale_price=?,sku=?,stock_qty=?,images=?,updated_at=datetime('now') WHERE id=?").bind(data.title, data.description || "", data.brand, data.price, data.salePrice || null, data.sku, data.stockQty || 0, JSON.stringify(data.images || []), productId).run(); return json({ ok: true }); }
   // --- Shipping zones (public) ---

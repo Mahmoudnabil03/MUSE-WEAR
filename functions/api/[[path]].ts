@@ -18,21 +18,8 @@ async function user(request: Request, env: Env) { const session = parseCookies(r
 async function body(request: Request) { try { return await request.json() as Record<string, unknown>; } catch { return {}; } }
 function product(row: Record<string, unknown>) { const list = (key: string) => { try { return JSON.parse(String(row[key] || "[]")); } catch { return []; } }; const images = list("images"); return { id: row.id, nameEn: row.title, nameAr: row.title, brand: row.brand, category: row.category_slug, subcategory: row.category_name, price: Number(row.sale_price ?? row.price), originalPrice: row.sale_price == null ? undefined : Number(row.price), image: images[0] || "/mw-mark.svg", images, colors: list("colors"), sizes: list("sizes"), isNew: Boolean(row.is_new), isMuseMade: Boolean(row.is_muse_made), stockQty: Number(row.stock_qty), sku: row.sku }; }
 
-// Static fallback catalog (mirrors src/lib/products.ts) for when D1 is empty / cold-start
-const FALLBACK_PRODUCTS = [
-  { id: "mw-001", nameEn: "MUSE Oversized Heavy Tee - Black", brand: "MUSE WEAR", category: "men", subcategory: "T-Shirts", price: 899, originalPrice: 1199, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "mw-002", nameEn: "MUSE Tailored Cargo Pants", brand: "MUSE WEAR", category: "men", subcategory: "Pants", price: 1499, image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "mw-003", nameEn: "Satin Wrap Dress - Emerald", brand: "MUSE WEAR", category: "women", subcategory: "Dresses", price: 1899, originalPrice: 2499, image: "https://images.unsplash.com/photo-1515372039744-f1fd71e2d06a?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1515372039744-f1fd71e2d06a?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "mw-004", nameEn: "Cropped Bomber Jacket", brand: "MUSE WEAR", category: "women", subcategory: "Jackets", price: 2199, image: "https://images.unsplash.com/photo-1550928431-ee0ec6db30d3?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1550928431-ee0ec6db30d3?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "br-001", nameEn: "Nike Air Max 270 - White/Black", brand: "Nike", category: "men", subcategory: "Shoes", price: 4299, originalPrice: 5499, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "br-002", nameEn: "Adidas Originals Hoodie", brand: "Adidas", category: "women", subcategory: "Hoodies", price: 1799, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "acc-001", nameEn: "MUSE Leather Crossbody Bag", brand: "MUSE WEAR", category: "accessories", subcategory: "Bags", price: 1299, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "acc-002", nameEn: "Chunky Gold Hoops Set", brand: "MUSE WEAR", category: "accessories", subcategory: "Jewelry", price: 499, originalPrice: 699, image: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "br-003", nameEn: "Puma RS-X - Multicolor", brand: "Puma", category: "men", subcategory: "Shoes", price: 3599, image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "mw-005", nameEn: "MUSE Linen Co-ord Set - Sand", brand: "MUSE WEAR", category: "women", subcategory: "Co-ords", price: 2499, image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "acc-003", nameEn: "Unisex Cap - MW Embroidery", brand: "MUSE WEAR", category: "accessories", subcategory: "Caps", price: 399, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-  { id: "br-004", nameEn: "Levi's 501 Straight Jeans", brand: "Levi's", category: "men", subcategory: "Jeans", price: 1999, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop&q=60", images: ["https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop&q=60"], availability: "in stock" },
-] as const;
+// Demo data removed — Taager import will populate D1. Empty fallback ensures no demo products leak to storefront or catalog.
+const FALLBACK_PRODUCTS: readonly unknown[] = [] as const;
 
 function csvEscape(v: string): string {
   if (v == null) return "";
@@ -214,6 +201,92 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
   }
   if (path === "products" && request.method === "GET") { const rows = await env.DB.prepare("SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.is_active=1 ORDER BY p.created_at DESC").all<Record<string, unknown>>(); return json({ products: rows.results.map(product) }); }
   if (path === "products" && ["POST", "PUT", "DELETE"].includes(request.method)) { const current = await user(request, env); if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403); const data = await body(request); if (request.method === "POST") { const productId = id(); await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sale_price,sku,stock_qty,images,colors,sizes,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(productId, data.title, data.description || "", data.brand, data.categoryId || null, data.price, data.salePrice || null, data.sku, data.stockQty || 0, JSON.stringify(data.images || []), JSON.stringify(data.colors || []), JSON.stringify(data.sizes || []), data.isNew ? 1 : 0, data.isMuseMade ? 1 : 0).run(); return json({ id: productId }, 201); } const productId = String(data.id || ""); if (request.method === "DELETE") await env.DB.prepare("UPDATE products SET is_active=0, updated_at=datetime('now') WHERE id=?").bind(productId).run(); else await env.DB.prepare("UPDATE products SET title=?,description=?,brand=?,price=?,sale_price=?,sku=?,stock_qty=?,images=?,updated_at=datetime('now') WHERE id=?").bind(data.title, data.description || "", data.brand, data.price, data.salePrice || null, data.sku, data.stockQty || 0, JSON.stringify(data.images || []), productId).run(); return json({ ok: true }); }
+  // --- Taager Import (admin only, handles dedup + 50% margin + MUSE exclusion) ---
+  if ((path === "taager/preview" || path === "taager/import") && request.method === "POST") {
+    const current = await user(request, env);
+    if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const data = await body(request);
+    const raw = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
+    if (!raw.length) return json({ error: "No products provided. Upload Taager export (JSON array) or connect Taager API." }, 400);
+    // Helpers inline (mirrors src/lib/server/taager.ts)
+    const normalizeName = (n: string) => n.toLowerCase().replace(/\s*-\s*taager.*$/i,"").replace(/\s+/g," ").trim();
+    const isMuse = (p: Record<string, unknown>) => {
+      const h = `${p.name||p.title||""} ${p.category||""} ${p.subcategory||""} ${p.brand||""} ${(Array.isArray(p.tags)? (p.tags as string[]).join(" "):"")}`.toLowerCase();
+      return h.includes("muse manufactured") || String(p.isMuseManufactured||p.is_muse_made||"").toLowerCase()==="true";
+    };
+    const isClothing = (p: Record<string, unknown>) => {
+      const cat = `${p.category||""} ${p.subcategory||""} ${(Array.isArray(p.tags)? (p.tags as string[]).join(" "):"")}`.toLowerCase();
+      return ["fashion","clothing","apparel","t-shirt","tshirt","dress","trouser","pants","jeans","jacket","hoodie","blouse","skirt","abaya","shoe"].some(k=>cat.includes(k));
+    };
+    const scoreVendor = (p: Record<string, unknown>) => {
+      const rating = Number(p.vendorRating ?? p.vendor_rating ?? 0) * 20;
+      const years = Math.min(Number(p.vendorYearsActive ?? p.vendor_years ?? 0)*5,25);
+      const rc = Number(p.reviewCount ?? p.review_count ?? 0);
+      const ra = Number(p.reviewAvg ?? p.review_avg ?? 0);
+      let reviewScore = 0;
+      if (rc >= 20 && ra >= 4.2 && ra <= 4.7) reviewScore = 25;
+      else if (rc >= 5 && ra < 4.8) reviewScore = 15;
+      else if (rc < 5) reviewScore = 0; else reviewScore = 10;
+      const hist = (p.salesHistory ?? p.sales_history) as number[] | undefined;
+      let stability = 10;
+      if (hist && hist.length >= 3) {
+        const avg = hist.reduce((a:number,b:number)=>a+b,0)/hist.length;
+        const variance = hist.reduce((a:number,b:number)=>a+Math.pow(b-avg,2),0)/hist.length;
+        const cv = avg ? Math.sqrt(variance)/avg : 1;
+        if (cv < 0.2) stability = 25; else if (cv < 0.4) stability = 15; else if (cv < 0.8) stability = 5; else stability = 0;
+      }
+      return rating + years + reviewScore + stability;
+    };
+    let excludedMuse = 0, excludedNonClothing = 0;
+    const filtered = raw.filter((p) => { if (isMuse(p)) { excludedMuse++; return false; } if (!isClothing(p)) { excludedNonClothing++; return false; } return true; });
+    const groups = new Map<string, Array<Record<string, unknown>>>();
+    for (const p of filtered) {
+      const key = normalizeName(String(p.name||p.title||""));
+      const arr = groups.get(key) || [];
+      arr.push(p);
+      groups.set(key, arr);
+    }
+    const duplicateGroups = Array.from(groups.values()).filter(g=>g.length>1).length;
+    const unique: Array<Record<string, unknown>> = [];
+    for (const group of groups.values()) {
+      const ranked = [...group].sort((a,b)=>scoreVendor(b)-scoreVendor(a));
+      const chosen = ranked[0];
+      const base = Number(chosen.basePrice ?? chosen.price ?? chosen.taager_price ?? 0);
+      const finalPrice = Math.round(base * 1.5 * 100)/100;
+      unique.push({
+        productName: String(chosen.name||chosen.title),
+        category: String(chosen.category||"Fashion"),
+        subcategory: String(chosen.subcategory||"Apparel"),
+        taagerBasePrice: base,
+        finalSellingPrice: finalPrice,
+        image: Array.isArray(chosen.images) ? String((chosen.images as string[])[0]||"") : String(chosen.image||""),
+        additionalImages: Array.isArray(chosen.images) ? (chosen.images as string[]).slice(1) : [],
+        vendorSelected: String(chosen.vendorName||chosen.vendor_name||""),
+        vendorId: String(chosen.vendorId||chosen.vendor_id||""),
+        trustScore: scoreVendor(chosen),
+        originalIds: group.map(g=>String(g.id||g.sku||"")),
+      });
+    }
+    unique.sort((a,b)=> String(a.category).localeCompare(String(b.category)) || Number(a.finalSellingPrice)-Number(b.finalSellingPrice));
+    if (path === "taager/preview") {
+      return json({ unique, stats: { totalRaw: raw.length, afterFilter: filtered.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
+    }
+    // Import: insert into D1 products
+    let imported = 0;
+    for (const u of unique) {
+      const pid = id();
+      const title = String(u.productName);
+      const images = JSON.stringify([u.image, ...((u.additionalImages as string[])||[])].filter(Boolean));
+      const price = Number(u.finalSellingPrice);
+      const sku = `TAAGER-${String(u.vendorId).slice(0,6).toUpperCase()}-${pid.slice(0,6).toUpperCase()}`;
+      try {
+        await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 50% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify([]), JSON.stringify([]), 0, 0).run();
+        imported++;
+      } catch {}
+    }
+    return json({ ok: true, imported, stats: { totalRaw: raw.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
+  }
   // --- Shipping zones (public) ---
   if (path === "shipping" && request.method === "GET") {
     try {

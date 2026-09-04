@@ -3,6 +3,7 @@ import ProductClient from "./client";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
+  if (products.length === 0) return [{ id: "placeholder" }];
   return products.map((p) => ({ id: p.id }));
 }
 

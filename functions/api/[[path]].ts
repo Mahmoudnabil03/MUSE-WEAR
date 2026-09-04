@@ -1,4 +1,4 @@
-interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string }
+interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string; TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string }
 interface D1Database { prepare(sql: string): D1PreparedStatement }
 interface D1PreparedStatement { bind(...values: unknown[]): D1PreparedStatement; first<T = unknown>(): Promise<T | null>; all<T = unknown>(): Promise<{ results: T[] }>; run(): Promise<unknown> }
 interface PagesContext { request: Request; env: Env; params: Record<string, string | string[] | undefined> }
@@ -16,7 +16,7 @@ async function hash(password: string) { const salt = crypto.getRandomValues(new 
 async function verify(password: string, stored: string) { const [scheme, count, salt, expected] = stored.split("$"); if (scheme !== "pbkdf2_sha256" || !count || !salt || !expected) return false; const key = await crypto.subtle.importKey("raw", buffer(new TextEncoder().encode(password)), "PBKDF2", false, ["deriveBits"]); const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: buffer(unb64(salt)), iterations: Number(count), hash: "SHA-256" }, key, 256); return b64(new Uint8Array(bits)) === expected; }
 async function user(request: Request, env: Env) { const session = parseCookies(request).muse_session; if (!session) return null; return env.DB.prepare("SELECT u.id, u.email, u.full_name, u.role, u.created_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=? AND s.expires_at > datetime('now')").bind(session).first<AppUser>(); }
 async function body(request: Request) { try { return await request.json() as Record<string, unknown>; } catch { return {}; } }
-function product(row: Record<string, unknown>) { const list = (key: string) => { try { return JSON.parse(String(row[key] || "[]")); } catch { return []; } }; const images = list("images"); return { id: row.id, nameEn: row.title, nameAr: row.title, brand: row.brand, category: row.category_slug, subcategory: row.category_name, price: Number(row.sale_price ?? row.price), originalPrice: row.sale_price == null ? undefined : Number(row.price), image: images[0] || "/mw-mark.svg", images, colors: list("colors"), sizes: list("sizes"), isNew: Boolean(row.is_new), isMuseMade: Boolean(row.is_muse_made), stockQty: Number(row.stock_qty), sku: row.sku }; }
+function product(row: Record<string, unknown>) { const list = (key: string) => { try { return JSON.parse(String(row[key] || "[]")); } catch { return []; } }; const images = list("images"); const variants = list("variants"); return { id: row.id, nameEn: row.title, nameAr: row.title, brand: row.brand, category: row.category_slug, subcategory: row.category_name, price: Number(row.sale_price ?? row.price), originalPrice: row.sale_price == null ? undefined : Number(row.price), image: images[0] || "/mw-mark.svg", images, colors: list("colors"), sizes: list("sizes"), variants, isNew: Boolean(row.is_new), isMuseMade: Boolean(row.is_muse_made), stockQty: Number(row.stock_qty), sku: row.sku }; }
 
 // Demo data removed — Taager import will populate D1. Empty fallback ensures no demo products leak to storefront or catalog.
 const FALLBACK_PRODUCTS: readonly unknown[] = [] as const;
@@ -209,7 +209,7 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     const raw = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
     if (!raw.length) return json({ error: "No products provided. Upload Taager export (JSON array) or connect Taager API." }, 400);
     // Helpers inline (mirrors src/lib/server/taager.ts)
-    const normalizeName = (n: string) => n.toLowerCase().replace(/\s*-\s*taager.*$/i,"").replace(/\s+/g," ").trim();
+     const normalizeName = (n: string) => n.toLowerCase().replace(/\b(2?xl|x{1,2}l|large|medium|small|l|m|s)\b/gi, "").replace(/\s*[-/]?\s*(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)\s*$/i, "").replace(/\s+/g," ").trim();
     const isMuse = (p: Record<string, unknown>) => {
       const h = `${p.name||p.title||""} ${p.category||""} ${p.subcategory||""} ${p.brand||""} ${(Array.isArray(p.tags)? (p.tags as string[]).join(" "):"")}`.toLowerCase();
       return h.includes("muse manufactured") || String(p.isMuseManufactured||p.is_muse_made||"").toLowerCase()==="true";
@@ -252,7 +252,10 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
       const ranked = [...group].sort((a,b)=>scoreVendor(b)-scoreVendor(a));
       const chosen = ranked[0];
       const base = Number(chosen.basePrice ?? chosen.price ?? chosen.taager_price ?? 0);
-      const finalPrice = Math.round(base * 1.5 * 100)/100;
+       const finalPrice = Math.round(base * 1.75 * 100)/100;
+       const inferSize = (name: string) => name.match(/\b(2XL|XL|L|M|S|large|medium|small)\b/i)?.[1] || "";
+       const inferColor = (name: string) => name.match(/(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)/i)?.[1] || "";
+       const variants = group.map((g) => ({ size: String(g.size || inferSize(String(g.name || g.title || ""))), color: String(g.color || inferColor(String(g.name || g.title || ""))), taagerProductId: String(g.id || g.sku || ""), taagerSku: String(g.sku || g.id || ""), taagerPrice: Number(g.basePrice ?? g.price ?? g.taager_price ?? 0), stock: Number(g.stock ?? g.stockQty ?? 100) }));
       unique.push({
         productName: String(chosen.name||chosen.title),
         category: String(chosen.category||"Fashion"),
@@ -263,7 +266,8 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
         additionalImages: Array.isArray(chosen.images) ? (chosen.images as string[]).slice(1) : [],
         vendorSelected: String(chosen.vendorName||chosen.vendor_name||""),
         vendorId: String(chosen.vendorId||chosen.vendor_id||""),
-        trustScore: scoreVendor(chosen),
+         trustScore: scoreVendor(chosen),
+         variants,
         originalIds: group.map(g=>String(g.id||g.sku||"")),
       });
     }
@@ -280,8 +284,15 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
       const price = Number(u.finalSellingPrice);
       const sku = `TAAGER-${String(u.vendorId).slice(0,6).toUpperCase()}-${pid.slice(0,6).toUpperCase()}`;
       try {
-        await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
-          .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 50% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify([]), JSON.stringify([]), 0, 0).run();
+         const variants = Array.isArray(u.variants) ? u.variants as Array<Record<string, unknown>> : [];
+         const sizeList = [...new Set(variants.map((v) => String(v.size || "")).filter(Boolean))];
+         const colorList = [...new Set(variants.map((v) => String(v.color || "")).filter(Boolean))];
+         await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,variants,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+           .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 75% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), 0, 0).run();
+         for (const v of variants as Array<Record<string, unknown>>) {
+           await env.DB.prepare("INSERT INTO product_variants (id,product_id,sku,size,color,stock,price_override,taager_product_id,taager_sku,taager_size,taager_color,taager_price,taager_vendor_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+             .bind(id(), pid, String(v.taagerSku || v.sku || v.taagerProductId || ""), String(v.size || ""), String(v.color || ""), Number(v.stock || 0), Math.round(Number(v.taagerPrice || 0) * 1.75), String(v.taagerProductId || ""), String(v.taagerSku || v.sku || ""), String(v.size || ""), String(v.color || ""), Number(v.taagerPrice || 0), String(u.vendorId || "")).run();
+         }
         imported++;
       } catch {}
     }
@@ -341,11 +352,12 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     if (!["cod","paymob"].includes(payment_method)) return json({ error: "Invalid payment method" }, 400);
     // Revalidate products/prices & stock
     let subtotal = 0;
-    const orderItems: Array<{ product_id: string; title: string; sku: string; size: string; qty: number; unit_price: number }> = [];
+     const orderItems: Array<{ product_id: string; title: string; sku: string; size: string; color: string; qty: number; unit_price: number; taager_product_id: string; taager_sku: string }> = [];
     for (const it of items) {
       const pid = String(it.product_id || it.id || "");
       const qty = Math.max(1, Number(it.qty || it.quantity || 1));
-      const size = String(it.size || "");
+       const size = String(it.size || "");
+       const color = String(it.color || "");
       // Try DB first, fallback to FALLBACK_PRODUCTS
       let prod: Record<string, unknown> | null = null;
       try {
@@ -357,11 +369,18 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
         if (fb) prod = { ...fb, price: Number(fb.price), stockQty: 100 } as Record<string, unknown>;
       }
       if (!prod) return json({ error: `Product ${pid} not found` }, 400);
-      const stock = Number((prod.stockQty as number) ?? 100);
+       let source: Record<string, unknown> | null = null;
+       try {
+         const variant = await env.DB.prepare("SELECT * FROM product_variants WHERE product_id=? AND size=? AND (?='' OR color=?) AND active=1 LIMIT 1").bind(pid, size, color, color).first<Record<string, unknown>>();
+         if (variant) source = variant;
+       } catch {}
+       const configuredVariants = (prod as Record<string, unknown>).variants;
+       if (size && !source && Array.isArray(configuredVariants) && configuredVariants.length > 0) return json({ error: `Size ${size} is unavailable for ${prod.nameEn || prod.title}` }, 409);
+       const stock = Number((source?.stock ?? prod.stockQty) ?? 100);
       if (stock < qty) return json({ error: `${prod.nameEn || prod.title} only ${stock} left` }, 400);
-      const unit = Number(prod.price);
+       const unit = source?.price_override != null ? Number(source.price_override) : Math.round(Number(prod.price) * 100) / 100;
       subtotal += unit * qty;
-      orderItems.push({ product_id: pid, title: String(prod.nameEn || prod.title), sku: String(prod.sku || pid), size, qty, unit_price: unit });
+       orderItems.push({ product_id: pid, title: String(prod.nameEn || prod.title), sku: String(source?.taager_sku || prod.sku || pid), size, color, qty, unit_price: unit, taager_product_id: String(source?.taager_product_id || ""), taager_sku: String(source?.taager_sku || prod.sku || pid) });
     }
     // Shipping
     let shipping = 59;
@@ -401,6 +420,7 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
         await env.DB.prepare("INSERT INTO order_items (id, order_id, product_id, title, sku, size, quantity, unit_price) VALUES (?,?,?,?,?,?,?,?)")
           .bind(id(), orderId, oi.product_id, oi.title, oi.sku, oi.size, oi.qty, oi.unit_price).run();
       }
+      try { await env.DB.prepare("UPDATE orders SET fulfillment_status='queued' WHERE id=?").bind(orderId).run(); } catch {}
       if (coupon_code && discount>0) {
         try { await env.DB.prepare("UPDATE discounts SET used_count = used_count + 1 WHERE code=?").bind(coupon_code).run(); } catch {}
       }
@@ -415,7 +435,23 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
         }
       } catch (e2) { return json({ error: "Failed to create order", details: String(e2) }, 500); }
     }
-    return json({ ok: true, orderId, subtotal, shipping, discount, total, payment_method }, 201);
+     let fulfillment: Record<string, unknown> = { status: "queued" };
+     const taagerUrl = (env as Record<string, string | undefined>).TAAGER_API_URL;
+     const taagerToken = (env as Record<string, string | undefined>).TAAGER_API_TOKEN;
+     if (taagerUrl && taagerToken) {
+       try {
+         const upstream = await fetch(taagerUrl, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${taagerToken}` }, body: JSON.stringify({ store_id: (env as Record<string, string | undefined>).TAAGER_STORE_ID, external_order_id: orderId, customer: { name: customer_name, phone, address, governorate, city, area, building }, items: orderItems.map((item) => ({ product_id: item.taager_product_id, sku: item.taager_sku, size: item.size, color: item.color, quantity: item.qty })) }) });
+         const result = await upstream.json().catch(() => ({})) as Record<string, unknown>;
+         if (!upstream.ok) throw new Error(`Taager HTTP ${upstream.status}`);
+         const taagerOrderId = String(result.order_id || result.id || "");
+         fulfillment = { status: "submitted", taagerOrderId };
+         await env.DB.prepare("UPDATE orders SET fulfillment_status='submitted', taager_order_id=? WHERE id=?").bind(taagerOrderId || null, orderId).run();
+       } catch (error) {
+         fulfillment = { status: "failed", error: String(error) };
+         try { await env.DB.prepare("UPDATE orders SET fulfillment_status='failed', fulfillment_error=? WHERE id=?").bind(String(error), orderId).run(); } catch {}
+       }
+     }
+     return json({ ok: true, orderId, subtotal, shipping, discount, total, payment_method, fulfillment }, 201);
   }
   if (path === "orders/track" && request.method === "GET") {
     const url = new URL(request.url);

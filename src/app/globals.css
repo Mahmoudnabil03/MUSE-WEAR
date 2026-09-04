@@ -1,28 +1,193 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  /* ORYZO — Darkroom product editorial */
+  --color-warm-cream: #ffedd7;
+  --color-walnut-shadow: #100904;
+  --color-bark-brown: #382416;
+  --color-cork-border: #40372e;
+  --color-driftwood: #6c5f51;
+  --color-ember-accent: #dc5000;
+  --color-pure-black: #000000;
+
+  --font-halyard-display-variable: 'Inter', 'Söhne', 'Neue Haas Grotesk', system-ui, -apple-system, sans-serif;
+  --font-arial: 'Arial', system-ui, sans-serif;
+
+  --text-subheading: 18px;
+  --text-heading-sm: 24px;
+  --text-body: 29px;
+  --text-heading: 41px;
+  --text-display: 51px;
+
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+  --spacing-9: 9px;
+  --spacing-10: 10px;
+  --spacing-12: 12px;
+  --spacing-14: 14px;
+  --spacing-18: 18px;
+  --spacing-24: 24px;
+  --spacing-31: 31px;
+  --spacing-41: 41px;
+  --spacing-45: 45px;
+  --spacing-68: 68px;
+  --spacing-204: 204px;
+
+  --card-padding: 24px;
+  --element-gap: 18px;
+
+  --radius-cards: 12px;
+  --radius-inputs: 0px;
+  --radius-buttons-pill: 36px;
+  --radius-buttons-outlined: 22.5px;
+
+  --background: var(--color-walnut-shadow);
+  --foreground: var(--color-warm-cream);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-warm-cream: #ffedd7;
+  --color-walnut-shadow: #100904;
+  --color-bark-brown: #382416;
+  --color-cork-border: #40372e;
+  --color-driftwood: #6c5f51;
+  --color-ember-accent: #dc5000;
 }
 
-* { scrollbar-width: thin; }
+* { scrollbar-width: thin; scrollbar-color: var(--color-cork-border) var(--color-walnut-shadow); }
+
+html { background: var(--color-walnut-shadow); }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  background: var(--color-walnut-shadow);
+  color: var(--color-warm-cream);
+  font-family: var(--font-halyard-display-variable);
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+::selection { background: var(--color-bark-brown); color: var(--color-warm-cream); }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Brand animations */
+/* ORYZO type voices: uppercase 500 default, 400 mixed-case body exception */
+.oryzo-display {
+  font-size: var(--text-display);
+  line-height: 0.9;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: normal;
+  font-feature-settings: "ss01" on;
+}
+.oryzo-heading {
+  font-size: var(--text-heading);
+  line-height: 0.9;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: normal;
+}
+.oryzo-heading-sm {
+  font-size: var(--text-heading-sm);
+  line-height: 1.09;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.oryzo-label {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: normal;
+}
+.oryzo-body {
+  font-size: var(--text-body);
+  line-height: 1.26;
+  font-weight: 400;
+  text-transform: none;
+}
+.oryzo-legal {
+  font-family: var(--font-arial);
+  font-size: 8px;
+  line-height: 1.2;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* ORYZO controls: one filled pill per section, ghost outlines, underline links/inputs */
+.btn-pill {
+  border-radius: var(--radius-buttons-pill);
+  background: var(--color-bark-brown);
+  color: var(--color-warm-cream);
+  padding: 14px 24px;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 14px;
+  border: 1px solid transparent;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+.btn-pill:hover { transform: translateY(-1px); background: #452c1b; }
+
+.btn-ghost {
+  border-radius: var(--radius-buttons-outlined);
+  background: transparent;
+  border: 1px solid var(--color-warm-cream);
+  color: var(--color-warm-cream);
+  padding: 7.5px 22px;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+.btn-ghost:hover { background: var(--color-warm-cream); color: var(--color-walnut-shadow); }
+
+.link-underline {
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-warm-cream);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+  text-decoration: underline;
+  text-decoration-color: var(--color-cork-border);
+  text-underline-offset: 4px;
+}
+.link-underline:hover { text-decoration-color: var(--color-warm-cream); }
+
+.input-underline {
+  border-radius: var(--radius-inputs);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-warm-cream);
+  color: var(--color-warm-cream);
+  padding: 8px 36px 8px 2px;
+  font-size: 14px;
+  outline: none;
+}
+.input-underline::placeholder { color: var(--color-driftwood); }
+
+.card-oryzo {
+  border-radius: var(--radius-cards);
+  background: transparent;
+  border: 1px solid var(--color-cork-border);
+  padding: var(--card-padding);
+}
+
+.divider-dashed {
+  border: 0;
+  border-top: 1px dashed var(--color-cork-border);
+}
+.divider-dashed-soft {
+  border: 0;
+  border-top: 1px dashed var(--color-driftwood);
+}
+
+.ember-credit { color: var(--color-ember-accent); }
+
+/* Brand animations — no drop shadows, depth via surface stack only */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -50,9 +215,9 @@ body {
 .reveal { opacity: 0; transform: translateY(16px); }
 .reveal.in { opacity: 1; transform: translateY(0); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
 
-/* Smooth hover lift */
-.hover-lift { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease; }
-.hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+/* Hover lift without shadows — ORYZO rejects blur elevation */
+.hover-lift { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s ease; }
+.hover-lift:hover { transform: translateY(-4px); }
 
 /* Logo shimmer */
-.shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
+.shimmer { background: linear-gradient(90deg, transparent, rgba(255,237,215,0.25), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }

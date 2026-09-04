@@ -1,6 +1,6 @@
 export function MWMark({ className = "w-10 h-10", invert = false }: { className?: string; invert?: boolean }) {
   return (
-    <div className={`${className} grid place-items-center ${invert ? "bg-white text-black" : "bg-black text-white"} relative overflow-hidden`}>
+    <div className={`${className} grid place-items-center ${invert ? "bg-[#ffedd7] text-[#100904]" : "bg-[#382416] text-[#ffedd7]"} relative overflow-hidden border border-[#40372e]`}>
       {/* Geometric MW Mark - CSS recreation for perfect scaling */}
       <svg viewBox="0 0 100 85" className="w-[85%] h-[85%]">
         {/* Outer shield */}
@@ -19,9 +19,9 @@ export function MuseWearLogo({ className = "", light = false }: { className?: st
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <MWMark className="w-10 h-10 shrink-0" invert={light} />
-      <div className={`leading-none ${light ? "text-white" : "text-black"}`}>
-        <div className="font-black tracking-[0.22em] text-[14px]">MUSE WEAR</div>
-        <div className={`text-[9px] tracking-[0.32em] font-semibold ${light ? "text-white/70" : "text-zinc-500"}`}>CAIRO, EGYPT</div>
+      <div className="leading-none text-[#ffedd7]">
+        <div className="font-medium tracking-[0.22em] text-[14px] uppercase">MUSE WEAR</div>
+        <div className="text-[9px] tracking-[0.32em] font-medium text-[#ffedd7]/70 uppercase">CAIRO, EGYPT</div>
       </div>
     </div>
   );

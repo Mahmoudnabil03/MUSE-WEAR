@@ -101,7 +101,7 @@ function CheckoutInner() {
           building, floor, apartment, area, city, governorate: gov,
           payment_method: method,
           coupon_code: coupon.trim() || undefined,
-          items: items.map((it)=>({ product_id: it.product.id, qty: it.qty, size: it.size || "", color: it.color })),
+           items: items.map((it)=>({ product_id: it.product.id, qty: it.qty, size: it.size || "", color: it.color || "" })),
           notes,
         }),
       });
@@ -119,16 +119,16 @@ function CheckoutInner() {
   };
 
   return (
-    <div className="max-w-[900px] mx-auto px-4 mt-6">
-      <div className="flex items-center gap-2 text-xs font-bold">
-        <Link href="/cart" className="text-zinc-400 hover:text-black">{t("Cart", "العربة")}</Link><span>›</span><span className="bg-black text-white px-2 py-0.5 rounded">2. {t("Details & Payment", "التفاصيل والدفع")}</span><span>›</span><span className="text-zinc-400">{t("Confirmation", "التأكيد")}</span>
+    <div className="max-w-[900px] mx-auto px-4 mt-6 bg-[#100904] text-[#ffedd7]">
+      <div className="flex items-center gap-2 oryzo-label">
+        <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link><span className="text-[#6c5f51]">›</span><span className="bg-[#382416] border border-[#40372e] text-[#ffedd7] px-2 py-0.5 rounded-full">2. {t("DETAILS & PAYMENT", "التفاصيل والدفع")}</span><span className="text-[#6c5f51]">›</span><span className="text-[#6c5f51]">{t("CONFIRMATION", "التأكيد")}</span>
       </div>
-      <h1 className="text-2xl font-black mt-3">{t("Checkout", "الدفع")}</h1>
-      <div className="text-xs text-zinc-500 mt-1"><Link href="/" className="hover:underline">{t("Home", "الرئيسية")}</Link> › <Link href="/cart" className="hover:underline">{t("Cart", "العربة")}</Link> › {t("Checkout", "الدفع")}</div>
-      <p className="text-xs text-zinc-500 mt-1">{t("Guest checkout — no account required. You can create one later.", "دفع كضيف — لا يلزم حساب.")}</p>
+      <h1 className="oryzo-heading mt-3 text-left">{t("CHECKOUT", "الدفع")}</h1>
+      <div className="oryzo-label mt-2 text-[#6c5f51]"><Link href="/" className="link-underline">{t("HOME", "الرئيسية")}</Link> › <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link> › {t("CHECKOUT", "الدفع")}</div>
+      <p className="oryzo-label mt-2 text-[#6c5f51]">{t("GUEST CHECKOUT — NO ACCOUNT REQUIRED.", "دفع كضيف — لا يلزم حساب.")}</p>
 
       <div className="mt-6 grid lg:grid-cols-[1fr_360px] gap-6">
-        <div className="bg-white border border-zinc-200 p-6 grid gap-4 rounded-2xl h-fit">
+        <div className="card-oryzo grid gap-4 h-fit">
           {err && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded">{err}</div>}
           <div className="font-bold text-sm">{t("Customer", "العميل")}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -188,8 +188,8 @@ function CheckoutInner() {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-200 p-6 rounded-2xl h-fit sticky top-[90px]">
-          <h3 className="font-black">{t("Order Summary","ملخص الطلب")}</h3>
+        <div className="card-oryzo h-fit sticky top-[160px]">
+          <h3 className="oryzo-heading-sm text-left">{t("ORDER SUMMARY","ملخص الطلب")}</h3>
           <div className="mt-3 space-y-1 text-sm max-h-[180px] overflow-y-auto">
             {items.map((it)=>(
               <div key={`${it.product.id}-${it.size}`} className="flex justify-between text-xs"><span className="truncate pr-2">{it.product.nameEn} ×{it.qty} {it.size?`(${it.size})`:""}</span><span className="font-bold shrink-0">{formatEGP(it.product.price*it.qty)}</span></div>
@@ -208,7 +208,7 @@ function CheckoutInner() {
             <div className="text-xs text-zinc-500">{method === "cod" ? t("You pay in EGP on delivery.", "الدفع بالجنيه عند الاستلام.") : t("Redirect to Paymob secure checkout.", "تحويل لبوابة Paymob الآمنة.")}</div>
           </div>
 
-          <button onClick={onPlace} disabled={loading} className="mt-4 w-full bg-black text-white py-3.5 rounded-full font-bold hover:bg-zinc-800 disabled:opacity-50 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">{loading? t("Placing…","جاري...") : method === "cod" ? t("Place Order - COD", "تأكيد الطلب - COD") : t("Pay with X-Pay", "ادفع بـ X-Pay")}</button>
+          <button onClick={onPlace} disabled={loading} className="btn-pill mt-4 w-full disabled:opacity-50">{loading? t("PLACING…","جاري...") : method === "cod" ? t("PLACE ORDER - COD", "تأكيد الطلب - COD") : t("PAY WITH X-PAY", "ادفع بـ X-Pay")}</button>
           <div className="text-xs text-center text-zinc-500 mt-2">{t("By placing order you agree to 14-day returns. Ships in 1-2 days across Egypt.", "بالطلب توافق على إرجاع 14 يوم. الشحن 1-2 يوم لكل مصر.")}</div>
           <div className="mt-3 text-xs text-center"><Link href="/track" className="underline">{t("Track existing order","تتبع طلب موجود")}</Link></div>
         </div>

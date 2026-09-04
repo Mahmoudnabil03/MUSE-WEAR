@@ -17,10 +17,10 @@ export default function CartPage() {
   const shipping = total > 999 ? 0 : total ? 59 : 0;
   const grand = Math.max(0, total + shipping - discount);
 
-  if (items.length === 0) return <div className="max-w-[1400px] mx-auto px-4 py-12 text-center"><h1 className="text-2xl font-black">{t("Your Bag is empty", "حقيبتك فارغة")}</h1><p className="text-sm text-zinc-500 mt-2">{t("Save items to wishlist or continue shopping", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="inline-block mt-4 bg-black text-white px-6 py-3 rounded-full font-bold focus:outline-none focus:ring-2 focus:ring-black">{t("Continue Shopping", "تابع التسوق")}</Link><div className="mt-8 text-xs text-zinc-400">Cash on Delivery • Paymob • 14-day returns</div></div>;
+  if (items.length === 0) return <div className="w-full px-6 md:px-10 py-12 text-center bg-[#100904] text-[#ffedd7]"><h1 className="oryzo-heading">{t("YOUR BAG IS EMPTY", "حقيبتك فارغة")}</h1><p className="oryzo-label mt-2 text-[#6c5f51]">{t("SAVE ITEMS TO WISHLIST OR CONTINUE SHOPPING", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="btn-pill inline-block mt-4">{t("CONTINUE SHOPPING", "تابع التسوق")}</Link><div className="oryzo-legal mt-8 text-[#6c5f51]">CASH ON DELIVERY • PAYMOB • 14-DAY RETURNS</div></div>;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 mt-6">
+    <div className="w-full px-6 md:px-10 mt-6 bg-[#100904] text-[#ffedd7]">
       <Breadcrumb items={[{ labelEn: "Shopping Bag", labelAr: "حقيبة التسوق" }]} />
       <div className="flex items-center gap-2 text-xs font-bold mt-2">
         <span className="bg-black text-white px-2 py-0.5 rounded">1. {t("Bag", "العربة")}</span><span>›</span><span className="text-zinc-400">2. {t("Details & Payment", "التفاصيل")}</span><span>›</span><span className="text-zinc-400">3. {t("Done", "تم")}</span>
@@ -30,7 +30,7 @@ export default function CartPage() {
           <h1 className="text-2xl font-black">{t("Shopping Bag", "حقيبة التسوق")} ({count})</h1>
           <div className="mt-4 space-y-3">
             {items.map((it) => (
-              <div key={`${it.product.id}-${it.size}`} className="bg-white border border-zinc-200 p-3 flex gap-4 rounded">
+              <div key={`${it.product.id}-${it.size}`} className="card-oryzo p-3 flex gap-4 !rounded-[12px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={it.product.image} alt={lang === "ar" ? it.product.nameAr : it.product.nameEn} className="w-24 h-28 object-cover bg-zinc-100 rounded" />
                 <div className="flex-1">
@@ -52,10 +52,10 @@ export default function CartPage() {
           </div>
           <Link href="/" className="inline-block mt-4 text-sm font-bold underline">← {t("Continue Shopping", "تابع التسوق")}</Link>
         </div>
-        <div className="bg-white border border-zinc-200 p-6 h-fit rounded-2xl sticky top-[120px]">
-          <h3 className="font-black">{t("Order Summary", "ملخص الطلب")}</h3>
+        <div className="card-oryzo h-fit sticky top-[160px]">
+          <h3 className="oryzo-heading-sm text-left">{t("ORDER SUMMARY", "ملخص الطلب")}</h3>
           <div className="mt-3 flex gap-2">
-            <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder={t("Promo code", "كود الخصم — WELCOME10")} aria-label="Promo code" className="flex-1 border border-zinc-300 rounded-full px-3 py-2 text-sm focus:border-black focus:outline-none uppercase" />
+            <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder={t("PROMO CODE", "كود الخصم — WELCOME10")} aria-label="Promo code" className="input-underline flex-1 uppercase" />
             <button disabled={validating} onClick={async () => {
               if (!coupon.trim()) { setCouponMsg(t("Enter code","أدخل الكود")); return; }
               setValidating(true); setCouponMsg("");

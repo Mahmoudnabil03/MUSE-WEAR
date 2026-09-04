@@ -3,7 +3,7 @@
  * - Only clothing/fashion
  * - Excludes MUSE manufactured
  * - Deduplicates by trusted vendor (rating, review quality, sales stability)
- * - Calculates Final Selling Price = Base * 1.50
+ * - Calculates Final Selling Price = Base * 1.75
  *
  * This module does NOT hardcode demo data. It operates on live Taager data
  * provided via authenticated API or CSV export. Without credentials, it
@@ -27,6 +27,9 @@ export type TaagerRawProduct = {
   images: string[];
   tags?: string[];
   isMuseManufactured?: boolean;
+  size?: string;
+  color?: string;
+  sku?: string;
 };
 
 export type TaagerUniqueProduct = {
@@ -41,6 +44,7 @@ export type TaagerUniqueProduct = {
   vendorId: string;
   trustScore: number;
   originalIds: string[]; // all duplicate IDs merged
+  variants: Array<{ size: string; color: string; taagerProductId: string; taagerSku: string; taagerPrice: number; stock: number }>;
 };
 
 // Normalize name for deduplication: lower, trim, remove vendor suffixes, extra spaces
@@ -49,6 +53,8 @@ function normalizeName(name: string): string {
     .toLowerCase()
     .replace(/\s*-\s*taager.*$/i, "")
     .replace(/[\u0640-\u065F]/g, "") // strip Arabic diacritics variant if any
+    .replace(/\b(2?xl|x{1,2}l|large|medium|small|l|m|s|مقاس\s*(?:صغير|وسط|كبير|لارج|إكس لارج))\b/gi, "")
+    .replace(/\s*[-/]?\s*(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -151,8 +157,7 @@ export function processTaagerProducts(raw: TaagerRawProduct[]): {
     // Sort by trust score descending
     const ranked = [...group].sort((a, b) => scoreVendor(b) - scoreVendor(a));
     const chosen = ranked[0];
-    // Calculate 50% margin
-    const finalSellingPrice = Math.round(chosen.basePrice * 1.5 * 100) / 100;
+    const finalSellingPrice = Math.round(chosen.basePrice * 1.75 * 100) / 100;
 
     // Categorize: use subcategory or infer from name
     const subcat = chosen.subcategory || inferSubcategory(chosen.name, chosen.category);
@@ -169,6 +174,14 @@ export function processTaagerProducts(raw: TaagerRawProduct[]): {
       vendorId: chosen.vendorId,
       trustScore: scoreVendor(chosen),
       originalIds: group.map((g) => g.id),
+      variants: group.map((g) => ({
+        size: g.size || inferSize(g.name),
+        color: g.color || inferColor(g.name),
+        taagerProductId: g.id,
+        taagerSku: g.sku || g.id,
+        taagerPrice: g.basePrice,
+        stock: 100,
+      })),
     });
   }
 
@@ -176,6 +189,16 @@ export function processTaagerProducts(raw: TaagerRawProduct[]): {
   unique.sort((a, b) => a.category.localeCompare(b.category) || a.finalSellingPrice - b.finalSellingPrice);
 
   return { unique, excludedMuse, excludedNonClothing, duplicateGroups };
+}
+
+function inferSize(name: string): string {
+  const match = name.match(/\b(2XL|XL|L|M|S|large|medium|small)\b/i);
+  return match?.[1] || "";
+}
+
+function inferColor(name: string): string {
+  const match = name.match(/(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)/i);
+  return match?.[1] || "";
 }
 
 function inferSubcategory(name: string, category: string): string {
@@ -194,7 +217,7 @@ function inferSubcategory(name: string, category: string): string {
 
 // Helpers for output formats
 export function toMarkdownTable(products: TaagerUniqueProduct[]): string {
-  const headers = ["Product Name", "Category", "Taager Base Price (EGP)", "Final Selling Price 50% (EGP)", "Vendor Selected", "Image"];
+  const headers = ["Product Name", "Category", "Taager Base Price (EGP)", "Final Selling Price 75% (EGP)", "Vendor Selected", "Image"];
   const rows = products.map((p) =>
     [
       p.productName,
@@ -216,10 +239,10 @@ export function toCSV(products: TaagerUniqueProduct[]): string {
     if (s.includes('"') || s.includes(",") || s.includes("\n")) return '"' + s.replace(/"/g, '""') + '"';
     return s;
   };
-  const headers = ["productName", "category", "subcategory", "taagerBasePrice", "finalSellingPrice", "vendorSelected", "vendorId", "trustScore", "image", "additionalImages"];
+  const headers = ["productName", "category", "subcategory", "taagerBasePrice", "finalSellingPrice", "vendorSelected", "vendorId", "trustScore", "image", "additionalImages", "variants"];
   const lines = [
     headers.join(","),
-    ...products.map((p) => [p.productName, p.category, p.subcategory, p.taagerBasePrice.toFixed(2), p.finalSellingPrice.toFixed(2), p.vendorSelected, p.vendorId, p.trustScore.toFixed(1), p.image, p.additionalImages.join("|")].map(esc).join(",")),
+    ...products.map((p) => [p.productName, p.category, p.subcategory, p.taagerBasePrice.toFixed(2), p.finalSellingPrice.toFixed(2), p.vendorSelected, p.vendorId, p.trustScore.toFixed(1), p.image, p.additionalImages.join("|"), JSON.stringify(p.variants)].map(esc).join(",")),
   ];
   return lines.join("\n");
 }

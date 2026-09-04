@@ -59,15 +59,15 @@ export default function ProductClient({ id }: { id: string }) {
   const recent = products.filter((x) => recentIds.includes(x.id) && x.id !== p.id).slice(0, 4);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 mt-6 pb-24 lg:pb-0">
+    <div className="w-full px-6 md:px-10 mt-6 pb-24 lg:pb-0 bg-[#100904] text-[#ffedd7]">
       <Breadcrumb items={[{ labelEn: p.category === "men" ? "Men" : p.category === "women" ? "Women" : "Accessories", labelAr: p.category === "men" ? "رجالي" : p.category === "women" ? "نسائي" : "إكسسوارات", href: categoryHref }, { labelEn: p.subcategory, labelAr: p.subcategory }, { labelEn: p.nameEn, labelAr: p.nameAr }]} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
         <div>
-          <div className="bg-zinc-100 aspect-[4/5] overflow-hidden rounded-2xl relative">
+          <div className="bg-[#100904] border border-[#40372e] aspect-[4/5] overflow-hidden rounded-[12px] relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.images[activeImg] || p.image} alt={name} className="w-full h-full object-cover" />
-            {discount > 0 && <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-black px-2 py-1 rounded">-{discount}%</span>}
-            <span className={`absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded-full ${stockInfo.status==="out"?"bg-red-600 text-white":stockInfo.status==="low"?"bg-amber-500 text-white":"bg-green-600 text-white"}`}>{stockInfo.status==="out"? t("Out of Stock","نفذ") : stockInfo.status==="low"? t(`Low Stock — ${stockInfo.stock} left`,`كمية قليلة — ${stockInfo.stock} متبقي`) : t("In Stock","متوفر")}</span>
+            {discount > 0 && <span className="absolute top-3 left-3 text-[12px] font-medium uppercase text-[#dc5000]">-{discount}%</span>}
+            <span className="absolute top-3 right-3 text-[12px] font-medium uppercase px-2 py-1 rounded-full border border-[#40372e] bg-[#100904]/80 text-[#ffedd7]">{stockInfo.status==="out"? t("OUT OF STOCK","نفذ") : stockInfo.status==="low"? t(`LOW STOCK — ${stockInfo.stock} LEFT`,`كمية قليلة — ${stockInfo.stock} متبقي`) : t("IN STOCK","متوفر")}</span>
           </div>
           {p.images.length > 1 && (
             <div className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
@@ -81,13 +81,13 @@ export default function ProductClient({ id }: { id: string }) {
           )}
         </div>
         <div>
-          <div className="text-xs font-bold tracking-wide text-zinc-500 flex items-center gap-2">{p.brand} {p.isMuseMade && <span className="bg-black text-white px-2 py-0.5 text-[10px] rounded-full">MUSE MANUFACTURED</span>} {p.isNew && <span className="bg-white border text-black px-2 py-0.5 text-[10px] rounded-full">NEW</span>}</div>
-          <h1 className="text-2xl font-black mt-2">{name}</h1>
+          <div className="oryzo-label text-[#6c5f51] flex items-center gap-2">{p.brand} {p.isMuseMade && <span className="bg-[#382416] border border-[#40372e] text-[#ffedd7] px-2 py-0.5 text-[10px] rounded-full uppercase">MUSE MANUFACTURED</span>} {p.isNew && <span className="bg-[#ffedd7] text-[#100904] px-2 py-0.5 text-[10px] rounded-full uppercase">NEW</span>}</div>
+          <h1 className="oryzo-heading !text-[41px] mt-3 text-left uppercase">{name}</h1>
           <div className="mt-3 flex items-baseline gap-3">
-            <span className="text-2xl font-black">{formatEGP(p.price)}</span>
-            {p.originalPrice && <span className="line-through text-zinc-400">{formatEGP(p.originalPrice)}</span>}
+            <span className="text-2xl font-medium uppercase">{formatEGP(p.price)}</span>
+            {p.originalPrice && <span className="line-through text-[#6c5f51]">{formatEGP(p.originalPrice)}</span>}
           </div>
-          <div className="text-xs text-green-700 font-semibold mt-1 flex flex-wrap gap-2"><span>✓ {t("Cash on Delivery","الدفع عند الاستلام")}</span><span>• {t("Paymob X-Pay","Paymob")}</span><span>• {t("14-day returns","إرجاع 14 يوم")}</span><span>• {t("Delivery 1-2 days","توصيل 1-2 يوم")}</span></div>
+          <div className="oryzo-label mt-2 flex flex-wrap gap-2 text-[#ffedd7]/80"><span>✓ {t("CASH ON DELIVERY","الدفع عند الاستلام")}</span><span className="text-[#6c5f51]">•</span><span>{t("PAYMOB X-PAY","Paymob")}</span><span className="text-[#6c5f51]">•</span><span>{t("14-DAY RETURNS","إرجاع 14 يوم")}</span></div>
 
           {/* Colors */}
           <div className="mt-6">
@@ -116,16 +116,16 @@ export default function ProductClient({ id }: { id: string }) {
             </div>
           )}
 
-          <div className="mt-6 flex gap-3">
-            <button onClick={handleAdd} disabled={!canAdd || stockInfo.status==="out"} className="flex-1 bg-black text-white py-3.5 rounded-full font-bold hover:bg-zinc-800 disabled:bg-zinc-300 disabled:cursor-not-allowed transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black" aria-disabled={!canAdd || stockInfo.status==="out"}>
-              {stockInfo.status==="out" ? t("Out of Stock","نفذ") : added ? t("Added ✓","تمت الإضافة ✓") : t("Add to Bag","أضف للحقيبة")}
+          <div className="mt-6 flex gap-[18px]">
+            <button onClick={handleAdd} disabled={!canAdd || stockInfo.status==="out"} className="btn-pill flex-1 disabled:opacity-50 disabled:cursor-not-allowed" aria-disabled={!canAdd || stockInfo.status==="out"}>
+              {stockInfo.status==="out" ? t("OUT OF STOCK","نفذ") : added ? t("ADDED ✓","تمت الإضافة ✓") : t("ADD TO BAG","أضف للحقيبة")}
             </button>
-            <button aria-label={has(p.id) ? "Remove from wishlist" : "Add to wishlist"} onClick={handleWishlist} className={`px-6 border rounded-full font-bold focus:outline-none focus:ring-2 focus:ring-black ${has(p.id) ? "bg-black text-white border-black" : "bg-white border-zinc-300"}`}><span aria-hidden>{has(p.id) ? "♥" : "♡"}</span></button>
+            <button aria-label={has(p.id) ? "Remove from wishlist" : "Add to wishlist"} onClick={handleWishlist} className="btn-ghost px-6"><span aria-hidden>{has(p.id) ? "♥" : "♡"}</span></button>
           </div>
-          <Link href="/checkout" onClick={handleAdd} className={`mt-3 block text-center border border-black py-3 rounded-full font-bold hover:bg-black hover:text-white transition ${!canAdd || stockInfo.status==="out" ? "pointer-events-none opacity-50" : ""}`}>{t("Buy Now","اشتر الآن")}</Link>
+          <Link href="/checkout" onClick={handleAdd} className={`btn-ghost mt-3 block text-center ${!canAdd || stockInfo.status==="out" ? "pointer-events-none opacity-50" : ""}`}>{t("BUY NOW","اشتر الآن")}</Link>
           {added && <div role="status" className="mt-3 text-sm text-green-700 bg-green-50 border border-green-200 px-3 py-2 rounded flex justify-between">{t("Added to bag","تمت الإضافة للعربة")} <Link href="/cart" className="underline font-bold">{t("View Bag","عرض العربة")}</Link></div>}
 
-          <div className="mt-6 bg-white border border-zinc-200 p-4 text-sm leading-relaxed rounded-2xl">
+          <div className="mt-6 card-oryzo text-sm leading-relaxed">
             <div className="font-bold">Product Details</div>
             <p className="text-zinc-600 mt-1 text-sm">{p.subcategory} • {p.brand} • Ships across Egypt • 14-day returns. {p.isMuseMade ? "Proudly manufactured by MUSE WEAR in Cairo." : "Curated multibrand selection."}</p>
             <div className="grid grid-cols-2 gap-2 mt-3 text-xs">

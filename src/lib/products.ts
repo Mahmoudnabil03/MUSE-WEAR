@@ -20,9 +20,26 @@ export type Product = {
   fit?: string;
   sku?: string;
   tags?: string[];
+  variants?: ProductVariant[];
+};
+
+export type ProductVariant = {
+  id?: string;
+  size: string;
+  color?: string;
+  sku?: string;
+  taagerProductId?: string;
+  taagerSku?: string;
+  stock?: number;
+  price?: number;
 };
 
 export function getVariantStock(p: Product, size?: string): { stock: number; status: "in" | "low" | "out" } {
+  const variant = p.variants?.find((v) => !size || v.size === size);
+  if (variant?.stock != null) {
+    const stock = Math.max(0, Number(variant.stock));
+    return { stock, status: stock <= 0 ? "out" : stock <= 3 ? "low" : "in" };
+  }
   const base = p.stockQty ?? 100;
   // simple heuristic: if size-specific stock not tracked, use base
   if (base <= 0) return { stock: 0, status: "out" };

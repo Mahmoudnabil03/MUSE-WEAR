@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" dir="ltr" className="h-full">
-      <body className="min-h-full flex flex-col bg-zinc-50 antialiased">
+      <body className="min-h-full flex flex-col bg-[#100904] text-[#ffedd7] antialiased">
         <Suspense fallback={null}>
           <MetaPixel />
         </Suspense>
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <WishlistProvider>
                 <Navbar />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 pt-[128px] bg-[#100904] text-[#ffedd7]">{children}</main>
                 <Footer />
               </WishlistProvider>
             </CartProvider>

@@ -18,21 +18,22 @@ export default function AccessoriesPage() {
   }, [brand, sort]);
   const catBrands = ["All", ...Array.from(new Set(products.filter((p) => p.category === "accessories").map((p) => p.brand)))];
   return (
-    <div className="max-w-[1400px] mx-auto px-4 mt-6">
+    <div className="w-full px-6 md:px-10 mt-6 bg-[#100904] text-[#ffedd7]">
       <Breadcrumb items={[{ labelEn: "Accessories", labelAr: "إكسسوارات" }]} />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-3">
-        <h1 className="text-2xl font-black">{t("ACCESSORIES", "إكسسوارات")} <span className="text-zinc-400 font-normal text-sm">{filtered.length} {t("products", "منتج")}</span></h1>
+        <h1 className="oryzo-heading text-left">{t("ACCESSORIES", "إكسسوارات")} <span className="text-[#6c5f51] text-sm font-medium">{filtered.length} {t("PRODUCTS", "منتج")}</span></h1>
         <div className="flex items-center gap-2">
-          <label htmlFor="sort-a" className="text-xs font-bold">{t("Sort by:", "ترتيب حسب:")}</label>
-          <select id="sort-a" value={sort} onChange={(e) => setSort(e.target.value)} className="border border-zinc-300 rounded-full px-3 py-2 text-sm focus:border-black focus:outline-none">
-            <option value="popular">{t("Popular", "الأكثر شعبية")}</option>
-            <option value="price-low">{t("Price: Low to High", "السعر: من الأقل")}</option>
-            <option value="price-high">{t("Price: High to Low", "السعر: من الأعلى")}</option>
+          <label htmlFor="sort-a" className="oryzo-label text-[#6c5f51]">{t("SORT BY:", "ترتيب حسب:")}</label>
+          <select id="sort-a" value={sort} onChange={(e) => setSort(e.target.value)} className="bg-transparent border border-[#40372e] rounded-[12px] px-3 py-2 text-sm uppercase font-medium text-[#ffedd7] focus:border-[#ffedd7] focus:outline-none [&>option]:bg-[#100904]">
+            <option value="popular">{t("POPULAR", "الأكثر شعبية")}</option>
+            <option value="price-low">{t("PRICE: LOW TO HIGH", "السعر: من الأقل")}</option>
+            <option value="price-high">{t("PRICE: HIGH TO LOW", "السعر: من الأعلى")}</option>
           </select>
         </div>
       </div>
-      <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar">{catBrands.map((b) => <button key={b} onClick={() => setBrand(b)} className={`px-4 py-2 rounded-full border text-sm font-semibold shrink-0 focus:outline-none focus:ring-2 focus:ring-black ${brand === b ? "bg-black text-white border-black" : "bg-white border-zinc-300 hover:border-black"}`}>{b}</button>)}</div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">{filtered.map((p, i) => <ProductCard key={p.id} p={p} index={i} />)}</div>
+      <hr className="divider-dashed mt-4" />
+      <div className="flex gap-[18px] mt-6 overflow-x-auto no-scrollbar">{catBrands.map((b) => <button key={b} onClick={() => setBrand(b)} className={brand === b ? "btn-pill !py-2 shrink-0" : "btn-ghost shrink-0"}>{b}</button>)}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px] mt-6">{filtered.map((p, i) => <ProductCard key={p.id} p={p} index={i} />)}</div>
     </div>
   );
 }

@@ -27,20 +27,6 @@ export default function Navbar() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 bg-[#100904]/95 backdrop-blur border-b border-dashed border-[#40372e] transition-colors ${scrolled ? "bg-[#100904]" : "bg-transparent"}`}>
-      <div className="text-[#ffedd7] text-[12px] font-medium uppercase overflow-hidden py-2 border-b border-dashed border-[#40372e] relative">
-        <div className="flex animate-marquee whitespace-nowrap will-change-transform">
-          {Array(4).fill(0).map((_, i) => (
-            <span key={i} className="mx-8 tracking-normal flex items-center gap-8 uppercase">
-              <span>{t("Free delivery in Cairo & Alexandria on orders over 999 EGP", "شحن مجاني داخل القاهرة والإسكندرية للطلبات فوق 999 جنيه")}</span>
-              <span className="text-[#6c5f51]">•</span>
-              <span>{t("Cash on Delivery available", "الدفع عند الاستلام متاح")}</span>
-              <span className="text-[#6c5f51]">•</span>
-              <span className="font-medium">MUSE WEAR — CAIRO, EGYPT</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
       <div className="w-full px-6 md:px-10">
         <div className="flex items-center gap-4 py-3">
           <Link href="/" className="flex items-center gap-3 shrink-0 group" aria-label="MUSE WEAR Home">

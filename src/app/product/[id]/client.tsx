@@ -108,7 +108,7 @@ export default function ProductClient({ id }: { id: string }) {
                   const st = getVariantStock(p, s);
                   const disabled = st.status==="out";
                   return (
-                    <button key={s} aria-pressed={size === s} disabled={disabled} onClick={() => setSize(s)} className={`px-5 py-2 border text-sm font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-black ${disabled?"bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed line-through": size === s ? "bg-black text-white border-black" : "bg-white border-zinc-300 hover:border-black"}`}>{s}</button>
+                    <button key={s} aria-pressed={size === s} disabled={disabled} onClick={() => setSize(s)} className={`px-5 py-2 border text-sm font-medium uppercase rounded-[22.5px] focus:outline-none focus:ring-2 focus:ring-[#ffedd7] ${disabled?"bg-transparent text-[#6c5f51] border-[#40372e] cursor-not-allowed line-through": size === s ? "bg-[#382416] text-[#ffedd7] border-[#ffedd7]" : "bg-transparent text-[#ffedd7] border-[#40372e] hover:border-[#ffedd7]"}`}>{s}</button>
                   );
                 })}
               </div>
@@ -159,9 +159,9 @@ export default function ProductClient({ id }: { id: string }) {
       )}
 
       {/* Sticky mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-3 z-40">
-        <button onClick={handleAdd} disabled={!canAdd || stockInfo.status==="out"} className="flex-1 bg-black text-white py-3 rounded-full font-bold disabled:bg-zinc-300">{stockInfo.status==="out"? t("Out of Stock","نفذ") : t("Add to Bag — ","أضف ") + formatEGP(p.price)}</button>
-        <button onClick={handleWishlist} className="w-12 h-12 border rounded-full grid place-items-center">{has(p.id)?"♥":"♡"}</button>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#100904] border-t border-dashed border-[#40372e] p-3 flex gap-3 z-40">
+        <button onClick={handleAdd} disabled={!canAdd || stockInfo.status==="out"} className="btn-pill flex-1 disabled:opacity-50">{stockInfo.status==="out"? t("OUT OF STOCK","نفذ") : t("ADD TO BAG — ","أضف ") + formatEGP(p.price)}</button>
+        <button onClick={handleWishlist} className="btn-ghost w-12 h-12 !p-0 grid place-items-center">{has(p.id)?"♥":"♡"}</button>
       </div>
     </div>
   );

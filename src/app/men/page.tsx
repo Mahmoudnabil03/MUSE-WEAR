@@ -1,6 +1,5 @@
 "use client";
 import ProductCard from "@/components/ProductCard";
-import Breadcrumb from "@/components/Breadcrumb";
 import { products } from "@/lib/products";
 import { useLang } from "@/lib/store";
 import { useState, useMemo } from "react";
@@ -24,7 +23,6 @@ export default function MenPage() {
   const catBrands = ["All", ...Array.from(new Set(products.filter((p) => p.category === "men").map((p) => p.brand)))];
   return (
     <div className="w-full px-6 md:px-10 mt-6 bg-[#100904] text-[#ffedd7]">
-      <Breadcrumb items={[{ labelEn: "Men", labelAr: "رجالي" }]} />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-3">
         <h1 className="oryzo-heading text-left">{t("MEN", "رجالي")} <span className="text-[#6c5f51] text-sm font-medium">{filtered.length} {t("PRODUCTS", "منتج")}</span></h1>
         <div className="flex items-center gap-2">

@@ -26,7 +26,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 bg-[#100904]/95 backdrop-blur border-b border-dashed border-[#40372e] transition-colors ${scrolled ? "bg-[#100904]" : "bg-transparent"}`}>
+    <header className={`sticky top-0 z-50 bg-[#100904]/95 backdrop-blur border-b border-dashed border-[#40372e] transition-colors ${scrolled ? "bg-[#100904]" : "bg-[#100904]/95"}`}>
       <div className="w-full px-6 md:px-10">
         <div className="flex items-center gap-4 py-3">
           <Link href="/" className="flex items-center gap-3 shrink-0 group" aria-label="MUSE WEAR Home">

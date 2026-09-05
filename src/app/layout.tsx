@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <WishlistProvider>
                 <Navbar />
-                <main className="flex-1 pt-[104px] bg-[#100904] text-[#ffedd7]">{children}</main>
+                <main className="flex-1 bg-[#100904] text-[#ffedd7]">{children}</main>
                 <Footer />
               </WishlistProvider>
             </CartProvider>

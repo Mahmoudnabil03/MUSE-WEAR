@@ -48,3 +48,6 @@ next-env.d.ts
 
 # career-ops workspace (separate project)
 career-ops/
+
+# local browser/debug artifacts
+.playwright-mcp/

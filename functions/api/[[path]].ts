@@ -206,8 +206,32 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     const current = await user(request, env);
     if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
     const data = await body(request);
-    const raw = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
-    if (!raw.length) return json({ error: "No products provided. Upload Taager export (JSON array) or connect Taager API." }, 400);
+    const incoming = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
+    if (!incoming.length) return json({ error: "No products provided. Upload Taager export (JSON array) or connect Taager API." }, 400);
+    // Normalize merchant-API variant shapes (financials/merchantInfo/color-size objects/images)
+    // into the flat shape the pipeline expects. Passes through flat objects unchanged.
+    const normStr = (v: unknown) => (v == null ? "" : String(v));
+    const normObjVal = (v: unknown) => (v != null && typeof v === "object" ? normStr((v as Record<string, unknown>).value ?? (v as Record<string, unknown>).name ?? "") : normStr(v));
+    const raw = incoming.map((item) => {
+      if ("basePrice" in item && !("financials" in item)) return item;
+      const financials = (item.financials as Record<string, unknown>) || {};
+      const images: string[] = [];
+      for (const key of ["productPicture", "image", "imageUrl", "extraImage1", "extraImage2", "extraImage3", "extraImage4", "extraImage5", "extraImage6"]) {
+        if (item[key]) images.push(normStr(item[key]));
+      }
+      const addl = (item.additionalMedia as unknown) || (item.images as unknown);
+      if (Array.isArray(addl)) for (const u of addl) if (u) images.push(normStr(u));
+      return {
+        ...item,
+        id: normStr(item.id ?? item.prodID ?? item.sku ?? ""),
+        name: normStr(item.name ?? item.productName ?? item.title ?? ""),
+        basePrice: Number(financials.price ?? financials.finalPrice ?? item.basePrice ?? item.productPrice ?? item.price ?? 0),
+        size: normObjVal(item.size),
+        color: normObjVal(item.color),
+        images: images.length ? images : (Array.isArray(item.images) ? item.images : []),
+        stock: typeof item.stock === "number" ? item.stock : (item.isProductAvailableToSell === false ? 0 : 100),
+      };
+    });
     // Helpers inline (mirrors src/lib/server/taager.ts)
      const normalizeName = (n: string) => n.toLowerCase().replace(/\b(2?xl|x{1,2}l|large|medium|small|l|m|s)\b/gi, "").replace(/\s*[-/]?\s*(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)\s*$/i, "").replace(/\s+/g," ").trim();
     const isMuse = (p: Record<string, unknown>) => {
@@ -251,8 +275,8 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     for (const group of groups.values()) {
       const ranked = [...group].sort((a,b)=>scoreVendor(b)-scoreVendor(a));
       const chosen = ranked[0];
-      const base = Number(chosen.basePrice ?? chosen.price ?? chosen.taager_price ?? 0);
-       const finalPrice = Math.round(base * 1.75 * 100)/100;
+       const base = Number(chosen.basePrice ?? chosen.price ?? chosen.taager_price ?? 0);
+       const finalPrice = Math.round(base * 1.5 * 100)/100;
        const inferSize = (name: string) => name.match(/\b(2XL|XL|L|M|S|large|medium|small)\b/i)?.[1] || "";
        const inferColor = (name: string) => name.match(/(أسود|ابيض|أبيض|بني|نيفي|احمر|أحمر|black|white|brown|navy)/i)?.[1] || "";
        const variants = group.map((g) => ({ size: String(g.size || inferSize(String(g.name || g.title || ""))), color: String(g.color || inferColor(String(g.name || g.title || ""))), taagerProductId: String(g.id || g.sku || ""), taagerSku: String(g.sku || g.id || ""), taagerPrice: Number(g.basePrice ?? g.price ?? g.taager_price ?? 0), stock: Number(g.stock ?? g.stockQty ?? 100) }));
@@ -288,10 +312,10 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
          const sizeList = [...new Set(variants.map((v) => String(v.size || "")).filter(Boolean))];
          const colorList = [...new Set(variants.map((v) => String(v.color || "")).filter(Boolean))];
          await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,variants,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-           .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 75% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), 0, 0).run();
+           .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 50% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), 0, 0).run();
          for (const v of variants as Array<Record<string, unknown>>) {
            await env.DB.prepare("INSERT INTO product_variants (id,product_id,sku,size,color,stock,price_override,taager_product_id,taager_sku,taager_size,taager_color,taager_price,taager_vendor_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
-             .bind(id(), pid, String(v.taagerSku || v.sku || v.taagerProductId || ""), String(v.size || ""), String(v.color || ""), Number(v.stock || 0), Math.round(Number(v.taagerPrice || 0) * 1.75), String(v.taagerProductId || ""), String(v.taagerSku || v.sku || ""), String(v.size || ""), String(v.color || ""), Number(v.taagerPrice || 0), String(u.vendorId || "")).run();
+             .bind(id(), pid, String(v.taagerSku || v.sku || v.taagerProductId || ""), String(v.size || ""), String(v.color || ""), Number(v.stock || 0), Math.round(Number(v.taagerPrice || 0) * 1.5), String(v.taagerProductId || ""), String(v.taagerSku || v.sku || ""), String(v.size || ""), String(v.color || ""), Number(v.taagerPrice || 0), String(u.vendorId || "")).run();
          }
         imported++;
       } catch {}

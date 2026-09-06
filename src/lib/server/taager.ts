@@ -3,7 +3,7 @@
  * - Only clothing/fashion
  * - Excludes MUSE manufactured
  * - Deduplicates by trusted vendor (rating, review quality, sales stability)
- * - Calculates Final Selling Price = Base * 1.75
+ * - Calculates Final Selling Price = Base * 1.50
  *
  * This module does NOT hardcode demo data. It operates on live Taager data
  * provided via authenticated API or CSV export. Without credentials, it
@@ -118,7 +118,59 @@ function isMuseManufactured(p: TaagerRawProduct): boolean {
   return haystack.includes("muse manufactured") || haystack.includes("muse__manufactured");
 }
 
-export function processTaagerProducts(raw: TaagerRawProduct[]): {
+/**
+ * Normalize a Taager merchant-API variant object (merchant.api.taager.com
+ * /api/products/variants shape: financials, merchantInfo, color/size objects,
+ * productPicture/extraImage*/additionalMedia) into TaagerRawProduct.
+ * Also passes through already-normalized objects unchanged.
+ */
+export function normalizeMerchantItem(item: Record<string, unknown>): TaagerRawProduct {
+  const str = (v: unknown) => (v == null ? "" : String(v));
+  const objVal = (v: unknown) =>
+    v != null && typeof v === "object"
+      ? str((v as Record<string, unknown>).value ?? (v as Record<string, unknown>).name ?? "")
+      : str(v);
+  const financials = (item.financials as Record<string, unknown>) || {};
+  const merchantInfo = (item.merchantInfo as Record<string, unknown>) || {};
+  const stockAv = (item.stockAvailability as Record<string, unknown>) || {};
+  const images: string[] = [];
+  for (const key of ["productPicture", "image", "imageUrl", "extraImage1", "extraImage2", "extraImage3", "extraImage4", "extraImage5", "extraImage6"]) {
+    if (item[key]) images.push(str(item[key]));
+  }
+  const addl = (item.additionalMedia as unknown) || (item.gallery_images as unknown) || (item.images as unknown);
+  if (Array.isArray(addl)) for (const u of addl) if (u) images.push(str(u));
+  const stock = (() => {
+    const detailed = stockAv.detailedStockRange as unknown;
+    if (typeof detailed === "number") return detailed;
+    if (typeof item.stock === "number") return item.stock as number;
+    if (typeof item.stockQty === "number") return item.stockQty as number;
+    if (item.isProductAvailableToSell === false) return 0;
+    return 100;
+  })();
+  return {
+    id: str(item.id ?? item.prodID ?? item.sku ?? ""),
+    name: str(item.name ?? item.productName ?? item.title ?? ""),
+    category: str(item.category ?? (item.category as Record<string, unknown>)?.text ?? "Fashion"),
+    subcategory: str(item.subcategory ?? ""),
+    brand: str(item.brand ?? ""),
+    vendorId: str(item.vendorId ?? item.vendor_id ?? item.merchantId ?? "taager"),
+    vendorName: str(item.vendorName ?? item.vendor_name ?? item.merchantName ?? "Taager"),
+    vendorRating: Number(item.vendorRating ?? item.vendor_rating ?? 0) || undefined,
+    vendorYearsActive: Number(item.vendorYearsActive ?? item.vendor_years ?? 0) || undefined,
+    reviewCount: Number(item.reviewCount ?? item.review_count ?? 0) || undefined,
+    reviewAvg: Number(item.reviewAvg ?? item.review_avg ?? 0) || undefined,
+    salesHistory: (item.salesHistory ?? item.sales_history) as number[] | undefined,
+    basePrice: Number(financials.price ?? financials.finalPrice ?? item.basePrice ?? item.productPrice ?? item.price ?? item.taager_price ?? 0),
+    images,
+    tags: Array.isArray(item.tags) ? (item.tags as string[]) : [],
+    isMuseManufactured: Boolean(item.isMuseManufactured ?? item.is_muse_made ?? false),
+    size: objVal(item.size),
+    color: objVal(item.color),
+    sku: str(item.sku ?? item.prodID ?? ""),
+  };
+}
+
+export function processTaagerProducts(rawInput: Array<TaagerRawProduct | Record<string, unknown>>): {
   unique: TaagerUniqueProduct[];
   excludedMuse: number;
   excludedNonClothing: number;
@@ -126,6 +178,13 @@ export function processTaagerProducts(raw: TaagerRawProduct[]): {
 } {
   let excludedMuse = 0;
   let excludedNonClothing = 0;
+
+  // 0. Normalize merchant-API shapes into TaagerRawProduct
+  const raw: TaagerRawProduct[] = rawInput.map((p) =>
+    "basePrice" in (p as Record<string, unknown>) && !("financials" in (p as Record<string, unknown>))
+      ? (p as TaagerRawProduct)
+      : normalizeMerchantItem(p as Record<string, unknown>)
+  );
 
   // 1. Filter clothing + exclude MUSE manufactured
   const filtered = raw.filter((p) => {
@@ -157,7 +216,7 @@ export function processTaagerProducts(raw: TaagerRawProduct[]): {
     // Sort by trust score descending
     const ranked = [...group].sort((a, b) => scoreVendor(b) - scoreVendor(a));
     const chosen = ranked[0];
-    const finalSellingPrice = Math.round(chosen.basePrice * 1.75 * 100) / 100;
+    const finalSellingPrice = Math.round(chosen.basePrice * 1.5 * 100) / 100;
 
     // Categorize: use subcategory or infer from name
     const subcat = chosen.subcategory || inferSubcategory(chosen.name, chosen.category);
@@ -217,7 +276,7 @@ function inferSubcategory(name: string, category: string): string {
 
 // Helpers for output formats
 export function toMarkdownTable(products: TaagerUniqueProduct[]): string {
-  const headers = ["Product Name", "Category", "Taager Base Price (EGP)", "Final Selling Price 75% (EGP)", "Vendor Selected", "Image"];
+  const headers = ["Product Name", "Category", "Taager Base Price (EGP)", "Final Selling Price 50% (EGP)", "Vendor Selected", "Image"];
   const rows = products.map((p) =>
     [
       p.productName,

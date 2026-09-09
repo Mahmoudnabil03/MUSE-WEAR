@@ -6,3 +6,7 @@ compatibility_date = "2024-12-01"
 binding = "DB"
 database_name = "muse-wear"
 database_id = "ae75bf67-c55f-4df9-bb51-010767871efa"
+
+# Cron: auto-retry queued fulfillments every 5 min — zero dashboard entry
+[triggers]
+crons = ["*/5 * * * *"]

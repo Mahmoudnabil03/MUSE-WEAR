@@ -1,4 +1,5 @@
-interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string; TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string }
+import { forwardOrder } from "../../src/lib/server/fulfillment";
+interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string; TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string; TAAGER_MERCHANT_EMAIL?: string; TAAGER_MERCHANT_PASSWORD?: string; TAAGER_FIREBASE_API_KEY?: string; TAAGER_FIREBASE_ID_TOKEN?: string; TAAGER_MERCHANT_API_URL?: string; TAAGER_WEBHOOK_URL?: string; TAAGER_DUKAN_URL?: string; TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string }
 interface D1Database { prepare(sql: string): D1PreparedStatement }
 interface D1PreparedStatement { bind(...values: unknown[]): D1PreparedStatement; first<T = unknown>(): Promise<T | null>; all<T = unknown>(): Promise<{ results: T[] }>; run(): Promise<unknown> }
 interface PagesContext { request: Request; env: Env; params: Record<string, string | string[] | undefined> }
@@ -459,23 +460,34 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
         }
       } catch (e2) { return json({ error: "Failed to create order", details: String(e2) }, 500); }
     }
-     let fulfillment: Record<string, unknown> = { status: "queued" };
-     const taagerUrl = (env as Record<string, string | undefined>).TAAGER_API_URL;
-     const taagerToken = (env as Record<string, string | undefined>).TAAGER_API_TOKEN;
-     if (taagerUrl && taagerToken) {
-       try {
-         const upstream = await fetch(taagerUrl, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${taagerToken}` }, body: JSON.stringify({ store_id: (env as Record<string, string | undefined>).TAAGER_STORE_ID, external_order_id: orderId, customer: { name: customer_name, phone, address, governorate, city, area, building }, items: orderItems.map((item) => ({ product_id: item.taager_product_id, sku: item.taager_sku, size: item.size, color: item.color, quantity: item.qty })) }) });
-         const result = await upstream.json().catch(() => ({})) as Record<string, unknown>;
-         if (!upstream.ok) throw new Error(`Taager HTTP ${upstream.status}`);
-         const taagerOrderId = String(result.order_id || result.id || "");
-         fulfillment = { status: "submitted", taagerOrderId };
-         await env.DB.prepare("UPDATE orders SET fulfillment_status='submitted', taager_order_id=? WHERE id=?").bind(taagerOrderId || null, orderId).run();
-       } catch (error) {
-         fulfillment = { status: "failed", error: String(error) };
-         try { await env.DB.prepare("UPDATE orders SET fulfillment_status='failed', fulfillment_error=? WHERE id=?").bind(String(error), orderId).run(); } catch {}
-       }
-     }
-     return json({ ok: true, orderId, subtotal, shipping, discount, total, payment_method, fulfillment }, 201);
+      // Hands-off fulfillment: try all configured strategies, queue for cron retry on failure (zero dashboard entry).
+      let fulfillment: Record<string, unknown> = { status: "queued" };
+      try {
+        const fwd = await forwardOrder(env as unknown as Record<string, string | undefined>, {
+          orderId, customer: { name: customer_name, phone, address, governorate, city, area, building, email: email || undefined },
+          items: orderItems, subtotal, shipping, total, payment_method,
+        });
+        if (fwd.ok) {
+          fulfillment = { status: "submitted", strategy: fwd.strategy, taagerOrderId: fwd.taagerOrderId };
+          try { await env.DB.prepare("UPDATE orders SET fulfillment_status='submitted', taager_order_id=?, fulfillment_error=NULL WHERE id=?").bind(fwd.taagerOrderId || null, orderId).run(); } catch {}
+          try { await env.DB.prepare("INSERT INTO fulfillment_attempts (id, order_id, strategy, status, http_status, response) VALUES (?,?,?,?,?,?)").bind(id(), orderId, fwd.strategy, "ok", fwd.httpStatus || null, JSON.stringify(fwd.body || {}).slice(0,4000)).run(); } catch {}
+        } else {
+          const needsQueue = fwd.strategy !== "telegram" || String(fwd.error || "").includes("No fulfillment endpoint");
+          fulfillment = { status: needsQueue ? "queued" : "failed", strategy: fwd.strategy, error: fwd.error, queued: needsQueue };
+          try { await env.DB.prepare("UPDATE orders SET fulfillment_status=?, fulfillment_error=? WHERE id=?").bind(needsQueue ? "queued" : "failed", String(fwd.error || "").slice(0,2000), orderId).run(); } catch {}
+          try { await env.DB.prepare("INSERT INTO fulfillment_attempts (id, order_id, strategy, status, http_status, response) VALUES (?,?,?,?,?,?)").bind(id(), orderId, fwd.strategy, "error", fwd.httpStatus || null, String(fwd.error || "").slice(0,4000)).run(); } catch {}
+          if (needsQueue) {
+            try {
+              await env.DB.prepare("INSERT INTO fulfillment_queue (id, order_id, attempts, next_attempt_at, last_error, strategy, payload) VALUES (?,?,?,?,?,?,?)")
+                .bind(id(), orderId, 1, new Date(Date.now()+ 60_000).toISOString(), String(fwd.error || "").slice(0,2000), fwd.strategy, JSON.stringify({ orderId, customer_name, phone, email, address, building, area, city, governorate, payment_method, subtotal, shipping, total, items: orderItems }).slice(0,8000)).run();
+            } catch {}
+          }
+        }
+      } catch (e) {
+        fulfillment = { status: "queued", error: String(e) };
+        try { await env.DB.prepare("INSERT INTO fulfillment_queue (id, order_id, attempts, next_attempt_at, last_error, payload) VALUES (?,?,?,?,?,?)").bind(id(), orderId, 1, new Date(Date.now()+60_000).toISOString(), String(e).slice(0,2000), JSON.stringify({ orderId, items: orderItems }).slice(0,8000)).run(); } catch {}
+      }
+      return json({ ok: true, orderId, subtotal, shipping, discount, total, payment_method, fulfillment }, 201);
   }
   if (path === "orders/track" && request.method === "GET") {
     const url = new URL(request.url);
@@ -527,7 +539,79 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
       return json({ ok: true }, 201);
     } catch { return json({ error: "Failed" }, 500); }
   }
-  if (path === "timeclock" && request.method === "GET") { const current = await user(request, env); if (!current || current.role === "customer") return json({ error: "Employee access required." }, 403); const rows = await env.DB.prepare("SELECT * FROM timesheets WHERE user_id=? ORDER BY clock_in DESC LIMIT 30").bind(current.id).all(); return json({ entries: rows.results }); }
-  if (path === "timeclock" && request.method === "POST") { const current = await user(request, env); if (!current || current.role === "customer") return json({ error: "Employee access required." }, 403); const open = await env.DB.prepare("SELECT id FROM timesheets WHERE user_id=? AND clock_out IS NULL").bind(current.id).first<{ id: string }>(); if (open) await env.DB.prepare("UPDATE timesheets SET clock_out=datetime('now') WHERE id=?").bind(open.id).run(); else await env.DB.prepare("INSERT INTO timesheets (id,user_id,clock_in) VALUES (?, ?, datetime('now'))").bind(id(), current.id).run(); return json({ ok: true }); }
-  return json({ error: "Not found" }, 404);
+   if (path === "timeclock" && request.method === "GET") { const current = await user(request, env); if (!current || current.role === "customer") return json({ error: "Employee access required." }, 403); const rows = await env.DB.prepare("SELECT * FROM timesheets WHERE user_id=? ORDER BY clock_in DESC LIMIT 30").bind(current.id).all(); return json({ entries: rows.results }); }
+   if (path === "timeclock" && request.method === "POST") { const current = await user(request, env); if (!current || current.role === "customer") return json({ error: "Employee access required." }, 403); const open = await env.DB.prepare("SELECT id FROM timesheets WHERE user_id=? AND clock_out IS NULL").bind(current.id).first<{ id: string }>(); if (open) await env.DB.prepare("UPDATE timesheets SET clock_out=datetime('now') WHERE id=?").bind(open.id).run(); else await env.DB.prepare("INSERT INTO timesheets (id,user_id,clock_in) VALUES (?, ?, datetime('now'))").bind(id(), current.id).run(); return json({ ok: true }); }
+   // --- Fulfillment: admin status + retry (automation never requires dashboard) ---
+   if (path === "fulfillment/status" && request.method === "GET") {
+     const current = await user(request, env);
+     if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
+     try {
+       const q = await env.DB.prepare("SELECT * FROM fulfillment_queue ORDER BY next_attempt_at ASC LIMIT 50").all();
+       const a = await env.DB.prepare("SELECT * FROM fulfillment_attempts ORDER BY created_at DESC LIMIT 50").all();
+       const o = await env.DB.prepare("SELECT id, fulfillment_status, fulfillment_error, taager_order_id, created_at FROM orders WHERE fulfillment_status IN ('queued','failed') ORDER BY created_at DESC LIMIT 50").all();
+       return json({ queue: q.results, attempts: a.results, orders: o.results });
+     } catch (e) { return json({ error: String(e) }, 500); }
+   }
+   if (path === "fulfillment/retry" && request.method === "POST") {
+     const current = await user(request, env);
+     if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
+     const data = await body(request);
+     const orderId = String(data.orderId || data.order_id || "").trim();
+     if (!orderId) return json({ error: "orderId required" }, 400);
+     try {
+       const order = await env.DB.prepare("SELECT * FROM orders WHERE id=?").bind(orderId).first<Record<string, unknown>>();
+       if (!order) return json({ error: "Order not found" }, 404);
+       const items = await env.DB.prepare("SELECT * FROM order_items WHERE order_id=?").bind(orderId).all<Record<string, unknown>>();
+       const fwd = await forwardOrder(env as unknown as Record<string, string | undefined>, {
+         orderId, customer: { name: String(order.customer_name), phone: String(order.phone), address: String(order.address), governorate: String(order.governorate), city: String(order.city||""), area: String(order.area||""), building: String(order.building||""), email: String(order.email||"") },
+         items: (items.results as unknown as Array<Record<string, unknown>>).map((r) => ({ product_id: String(r.product_id), sku: String(r.sku), size: String(r.size||""), color: String((r as Record<string, unknown>).color||""), quantity: Number(r.quantity), taager_product_id: String((r as Record<string, unknown>).taager_product_id||r.sku||""), taager_sku: String(r.sku), title: String(r.title), unit_price: Number(r.unit_price) })),
+         subtotal: Number(order.subtotal), shipping: Number(order.shipping), total: Number(order.total), payment_method: String(order.payment_method),
+       });
+       if (fwd.ok) {
+         await env.DB.prepare("UPDATE orders SET fulfillment_status='submitted', taager_order_id=?, fulfillment_error=NULL WHERE id=?").bind(fwd.taagerOrderId||null, orderId).run();
+         await env.DB.prepare("DELETE FROM fulfillment_queue WHERE order_id=?").bind(orderId).run();
+         return json({ ok: true, strategy: fwd.strategy, taagerOrderId: fwd.taagerOrderId });
+       } else {
+         await env.DB.prepare("UPDATE orders SET fulfillment_status='failed', fulfillment_error=? WHERE id=?").bind(String(fwd.error).slice(0,2000), orderId).run();
+         return json({ ok: false, strategy: fwd.strategy, error: fwd.error }, 502);
+       }
+     } catch (e) { return json({ error: String(e) }, 500); }
+   }
+   // Cron tick — called by Cloudflare Cron or manual GET with ?cron=1 (service key not needed due to admin check bypass for cron UA)
+   if (path === "fulfillment/tick" && (request.method === "POST" || request.method === "GET")) {
+     const ua = request.headers.get("user-agent") || "";
+     const cronSecret = (env as Record<string, string|undefined>).CRON_SECRET;
+     const auth = request.headers.get("authorization") || "";
+     const isCron = ua.includes("cloudflare") || (cronSecret && auth === `Bearer ${cronSecret}`);
+     // also allow admin
+     let allowed = isCron;
+     if (!allowed) { const u = await user(request, env); allowed = !!u && u.role === "admin"; }
+     if (!allowed) return json({ error: "Unauthorized tick" }, 401);
+     try {
+       const due = await env.DB.prepare("SELECT * FROM fulfillment_queue WHERE next_attempt_at <= datetime('now') AND attempts < max_attempts ORDER BY next_attempt_at ASC LIMIT 5").all<Record<string, unknown>>();
+       const results: unknown[] = [];
+       for (const row of due.results) {
+         const orderId = String(row.order_id);
+         const payload = JSON.parse(String(row.payload)) as Record<string, unknown>;
+         const items = (payload.items as Array<Record<string, unknown>>) || [];
+         const fwd = await forwardOrder(env as unknown as Record<string, string | undefined>, {
+           orderId, customer: { name: String(payload.customer_name||payload.name||""), phone: String(payload.phone||""), address: String(payload.address||""), governorate: String(payload.governorate||"Cairo"), city: String(payload.city||""), area: String(payload.area||""), building: String(payload.building||""), email: String(payload.email||"") },
+           items: items as unknown as Array<{ product_id:string; sku:string; size:string; color:string; quantity:number; taager_product_id:string; taager_sku:string; title:string; unit_price:number }>,
+           subtotal: Number(payload.subtotal||0), shipping: Number(payload.shipping||0), total: Number(payload.total||0), payment_method: String(payload.payment_method||"cod"),
+         });
+         if (fwd.ok) {
+           await env.DB.prepare("UPDATE orders SET fulfillment_status='submitted', taager_order_id=?, fulfillment_error=NULL WHERE id=?").bind(fwd.taagerOrderId||null, orderId).run();
+           await env.DB.prepare("DELETE FROM fulfillment_queue WHERE order_id=?").bind(orderId).run();
+           await env.DB.prepare("INSERT INTO fulfillment_attempts (id, order_id, strategy, status, http_status, response) VALUES (?,?,?,?,?,?)").bind(id(), orderId, fwd.strategy, "ok", fwd.httpStatus||null, JSON.stringify(fwd.body||{}).slice(0,4000)).run();
+         } else {
+           const backoffMin = Math.min(60, Math.pow(2, Number(row.attempts)));
+           await env.DB.prepare("UPDATE fulfillment_queue SET attempts=attempts+1, last_error=?, next_attempt_at=datetime('now', ?), strategy=?, updated_at=datetime('now') WHERE id=?").bind(String(fwd.error).slice(0,2000), `+${backoffMin} minutes`, fwd.strategy, String(row.id)).run();
+           await env.DB.prepare("INSERT INTO fulfillment_attempts (id, order_id, strategy, status, http_status, response) VALUES (?,?,?,?,?,?)").bind(id(), orderId, fwd.strategy, "error", fwd.httpStatus||null, String(fwd.error).slice(0,4000)).run();
+         }
+         results.push({ orderId, ok: fwd.ok, strategy: fwd.strategy, error: fwd.error });
+       }
+       return json({ ok: true, processed: results.length, results });
+     } catch (e) { return json({ error: String(e) }, 500); }
+   }
+   return json({ error: "Not found" }, 404);
 };

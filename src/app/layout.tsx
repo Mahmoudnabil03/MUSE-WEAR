@@ -8,14 +8,34 @@ import { AuthProvider } from "@/lib/auth";
 import MetaPixel from "@/components/MetaPixel";
 
 export const metadata: Metadata = {
-  title: "MUSE WEAR | Cairo, Egypt - Multibrand Fashion",
-  description: "MUSE WEAR EGYPT - Egypt's Namshi competitor. Multibrand + our own manufacturing. Men, Women, Accessories. COD & Paymob. Ships across Egypt.",
+  title: "MUSE WEAR | Cairo, Egypt — Curated Fashion. Made in Cairo.",
+  description: "MUSE WEAR — Cairo, Egypt. The MW mark. Curated fashion, made in Cairo. Men, Women, Accessories. COD & Paymob. Ships across Egypt.",
+  metadataBase: new URL("https://muse-wear.pages.dev"),
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  openGraph: {
+    title: "MUSE WEAR — Cairo, Egypt",
+    description: "The MW mark. Curated fashion, made in Cairo.",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "MUSE WEAR — Cairo, Egypt" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MUSE WEAR — Cairo, Egypt",
+    description: "The MW mark. Curated fashion, made in Cairo.",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" dir="ltr" className="h-full">
-      <body className="min-h-full flex flex-col bg-[#100904] text-[#ffedd7] antialiased">
+      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-[#ffedd7] antialiased">
         <Suspense fallback={null}>
           <MetaPixel />
         </Suspense>
@@ -24,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <WishlistProvider>
                 <Navbar />
-                <main className="flex-1 bg-[#100904] text-[#ffedd7]">{children}</main>
+                <main className="flex-1 bg-[#0a0a0a] text-[#ffedd7]">{children}</main>
                 <Footer />
               </WishlistProvider>
             </CartProvider>

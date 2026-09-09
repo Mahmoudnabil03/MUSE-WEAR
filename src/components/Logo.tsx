@@ -1,27 +1,70 @@
-export function MWMark({ className = "w-10 h-10", invert = false }: { className?: string; invert?: boolean }) {
+import Image from "next/image";
+
+export function MWMark({
+  className = "w-10 h-10",
+  invert = false,
+  withText = false,
+}: {
+  className?: string;
+  invert?: boolean;
+  withText?: boolean;
+}) {
+  // Geometric MW mark — now pixel-perfect from the official jpg (public/mw-logo.jpg)
+  // withText=false renders the square mark only; withText=true renders mark + wordmark.
+  // On the dark ORYZO ground (#100904) we invert to white so the black mark reads as luxury emboss.
+  const src = invert ? "/mw-logo-inverted.jpg" : "/mw-logo.jpg";
   return (
-    <div className={`${className} grid place-items-center ${invert ? "bg-[#ffedd7] text-[#100904]" : "bg-[#382416] text-[#ffedd7]"} relative overflow-hidden border border-[#40372e]`}>
-      {/* Geometric MW Mark - CSS recreation for perfect scaling */}
-      <svg viewBox="0 0 100 85" className="w-[85%] h-[85%]">
-        {/* Outer shield */}
-        <path d="M5 5 L50 32 L95 5 L95 58 L88 62 L88 18 L50 42 L12 18 L12 62 L5 58 Z" fill="currentColor" />
-        <path d="M5 62 L12 66 L18 69 L24 58 L38 50 L38 72 L50 82 L62 72 L62 50 L76 58 L82 69 L88 66 L95 62 L95 68 L82 76 L50 92 L18 76 L5 68 Z" fill="currentColor" />
-        {/* Inner white cut - use background color */}
-        <path d="M22 22 L22 64 L28 67 L32 42 L50 32 L68 42 L72 67 L78 64 L78 22 L50 36 Z" fill={invert ? "black" : "white"} />
-        {/* Center notch */}
-        <path d="M42 45 L50 38 L58 45 L50 52 Z" fill={invert ? "black" : "white"} />
-      </svg>
+    <div
+      className={`${className} relative shrink-0 overflow-hidden ${withText ? "" : "rounded-[2px]"} bg-transparent`}
+      aria-hidden
+    >
+      <Image
+        src={src}
+        alt={withText ? "MUSE WEAR — Cairo, Egypt" : "MUSE WEAR mark"}
+        fill
+        sizes="80px"
+        className={`object-contain ${withText ? "" : "scale-[1.08]"}`}
+        priority={false}
+      />
     </div>
   );
 }
 
-export function MuseWearLogo({ className = "", light = false }: { className?: string; light?: boolean }) {
+export function MuseWearLogo({
+  className = "",
+  light = false,
+  compact = false,
+}: {
+  className?: string;
+  light?: boolean;
+  compact?: boolean;
+}) {
+  // light=true → white mark for use on #100904 / black grounds (header, footer, hero)
+  if (compact) {
+    return (
+      <div className={`flex items-center gap-3 ${className}`}>
+        <MWMark className="w-10 h-10" invert={light} withText={false} />
+        <div className={`leading-none ${light ? "text-[#ffedd7]" : "text-black"}`}>
+          <div className="font-medium tracking-[0.22em] text-[14px] uppercase">MUSE WEAR</div>
+          <div className={`text-[9px] tracking-[0.32em] font-medium uppercase ${light ? "text-[#ffedd7]/70" : "text-black/60"}`}>
+            CAIRO, EGYPT
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <MWMark className="w-10 h-10 shrink-0" invert={light} />
-      <div className="leading-none text-[#ffedd7]">
-        <div className="font-medium tracking-[0.22em] text-[14px] uppercase">MUSE WEAR</div>
-        <div className="text-[9px] tracking-[0.32em] font-medium text-[#ffedd7]/70 uppercase">CAIRO, EGYPT</div>
+      {/* Full lockup — uses the official file so geometry, kerning, and diagonal cuts are exact */}
+      <div className="relative h-[44px] w-[160px] shrink-0 sm:h-[48px] sm:w-[180px]">
+        <Image
+          src={light ? "/mw-logo-inverted.jpg" : "/mw-logo.jpg"}
+          alt="MUSE WEAR — Cairo, Egypt"
+          fill
+          sizes="180px"
+          className="object-contain object-left"
+          priority
+        />
       </div>
     </div>
   );

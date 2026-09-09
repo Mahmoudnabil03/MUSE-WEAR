@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  /* ORYZO — Darkroom product editorial */
+  /* MUSE WEAR — MW Mark system (logo-derived). ORYZO darkroom tuned to the black/white mark. */
   --color-warm-cream: #ffedd7;
-  --color-walnut-shadow: #100904;
-  --color-bark-brown: #382416;
-  --color-cork-border: #40372e;
+  --color-walnut-shadow: #0a0a0a; /* deepened to pure MW black for mark contrast */
+  --color-bark-brown: #1a1a1a;
+  --color-cork-border: #2a2a2a;
   --color-driftwood: #6c5f51;
   --color-ember-accent: #dc5000;
   --color-pure-black: #000000;
+  --color-muse-white: #ffffff;
+  --color-muse-paper: #faf9f7; /* paper for light lockup backgrounds */
 
   --font-halyard-display-variable: 'Inter', 'Söhne', 'Neue Haas Grotesk', system-ui, -apple-system, sans-serif;
   --font-arial: 'Arial', system-ui, sans-serif;

@@ -13,7 +13,7 @@ export default function Home() {
   const sale = products.filter((p) => p.originalPrice);
 
   return (
-    <div className="overflow-x-hidden bg-[#100904] text-[#ffedd7]">
+    <div className="overflow-x-hidden bg-[#0a0a0a] text-[#ffedd7]">
       <Hero />
 
       <hr className="divider-dashed mx-6 md:mx-10 mt-10" />
@@ -34,7 +34,10 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 mt-16 min-h-[100vh]">
         <div className="card-oryzo p-6 md:p-10 flex flex-col md:flex-row items-start gap-6">
           <div className="relative flex items-center gap-4 shrink-0">
-            <div className="w-16 h-16 bg-[#382416] border border-[#40372e] text-[#ffedd7] grid place-items-center font-medium text-3xl animate-float">M</div>
+            <div className="w-16 h-16 bg-black border border-[#2a2a2a] overflow-hidden relative">
+              {/* eslint-disable @next/next/no-img-element */}
+              <img src="/mw-logo-inverted.jpg" alt="MW" className="absolute inset-0 w-full h-full object-cover scale-[1.05]" />
+            </div>
             <MuseWearLogo light className="hidden md:flex" />
           </div>
           <div className="relative flex-1 text-left">
@@ -59,10 +62,10 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px] mt-8">
           {categories.map((c, i) => (
-            <Link key={c.key} href={`/${c.key}`} className="relative overflow-hidden h-[420px] group bg-[#100904] border border-[#40372e] rounded-[12px] animate-fadeInUp" style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}>
+            <Link key={c.key} href={`/${c.key}`} className="relative overflow-hidden h-[420px] group bg-[#0a0a0a] border border-[#2a2a2a] rounded-[12px] animate-fadeInUp" style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.image} alt={c.labelEn} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-[1000ms]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#100904] via-[#100904]/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/20 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 text-[#ffedd7] flex items-end justify-between">
                 <div className="text-left">
                   <div className="oryzo-heading-sm">{lang === "ar" ? c.labelAr : c.labelEn}</div>

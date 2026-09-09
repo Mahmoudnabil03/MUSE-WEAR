@@ -7,6 +7,7 @@ binding = "DB"
 database_name = "muse-wear"
 database_id = "ae75bf67-c55f-4df9-bb51-010767871efa"
 
-# Cron: auto-retry queued fulfillments every 5 min — zero dashboard entry
-[triggers]
-crons = ["*/5 * * * *"]
+# Cron: Pages doesn't run wrangler triggers — set a dashboard Cron Trigger
+# to GET https://muse-wear.pages.dev/api/fulfillment/tick every 5 min
+# (or hit it manually via POST /api/fulfillment/tick as admin).
+# If you deploy as a Worker, add: [triggers] crons = ["*/5 * * * *"]

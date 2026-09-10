@@ -17,12 +17,12 @@ export default function AccessoriesPage() {
   }, [brand, sort]);
   const catBrands = ["All", ...Array.from(new Set(products.filter((p) => p.category === "accessories").map((p) => p.brand)))];
   return (
-    <div className="w-full px-6 md:px-10 mt-6 bg-[#100904] text-[#ffedd7]">
+    <div className="w-full px-6 md:px-10 mt-6 bg-[#000000] text-[#ffffff]">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-3">
-        <h1 className="oryzo-heading text-left">{t("ACCESSORIES", "إكسسوارات")} <span className="text-[#6c5f51] text-sm font-medium">{filtered.length} {t("PRODUCTS", "منتج")}</span></h1>
+        <h1 className="oryzo-heading text-left">{t("ACCESSORIES", "إكسسوارات")} <span className="text-[#737373] text-sm font-medium">{filtered.length} {t("PRODUCTS", "منتج")}</span></h1>
         <div className="flex items-center gap-2">
-          <label htmlFor="sort-a" className="oryzo-label text-[#6c5f51]">{t("SORT BY:", "ترتيب حسب:")}</label>
-          <select id="sort-a" value={sort} onChange={(e) => setSort(e.target.value)} className="bg-transparent border border-[#40372e] rounded-[12px] px-3 py-2 text-sm uppercase font-medium text-[#ffedd7] focus:border-[#ffedd7] focus:outline-none [&>option]:bg-[#100904]">
+          <label htmlFor="sort-a" className="oryzo-label text-[#737373]">{t("SORT BY:", "ترتيب حسب:")}</label>
+          <select id="sort-a" value={sort} onChange={(e) => setSort(e.target.value)} className="bg-transparent border border-[#262626] rounded-[12px] px-3 py-2 text-sm uppercase font-medium text-[#ffffff] focus:border-[#ffffff] focus:outline-none [&>option]:bg-[#000000]">
             <option value="popular">{t("POPULAR", "الأكثر شعبية")}</option>
             <option value="price-low">{t("PRICE: LOW TO HIGH", "السعر: من الأقل")}</option>
             <option value="price-high">{t("PRICE: HIGH TO LOW", "السعر: من الأعلى")}</option>

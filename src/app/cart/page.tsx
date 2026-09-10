@@ -17,10 +17,10 @@ export default function CartPage() {
   const shipping = total > 999 ? 0 : total ? 59 : 0;
   const grand = Math.max(0, total + shipping - discount);
 
-  if (items.length === 0) return <div className="w-full px-6 md:px-10 py-12 text-center bg-[#100904] text-[#ffedd7]"><h1 className="oryzo-heading">{t("YOUR BAG IS EMPTY", "حقيبتك فارغة")}</h1><p className="oryzo-label mt-2 text-[#6c5f51]">{t("SAVE ITEMS TO WISHLIST OR CONTINUE SHOPPING", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="btn-pill inline-block mt-4">{t("CONTINUE SHOPPING", "تابع التسوق")}</Link><div className="oryzo-legal mt-8 text-[#6c5f51]">CASH ON DELIVERY • PAYMOB • 14-DAY RETURNS</div></div>;
+  if (items.length === 0) return <div className="w-full px-6 md:px-10 py-12 text-center bg-[#000000] text-[#ffffff]"><h1 className="oryzo-heading">{t("YOUR BAG IS EMPTY", "حقيبتك فارغة")}</h1><p className="oryzo-label mt-2 text-[#737373]">{t("SAVE ITEMS TO WISHLIST OR CONTINUE SHOPPING", "احفظ في الرغبات أو تابع التسوق")}</p><Link href="/" className="btn-pill inline-block mt-4">{t("CONTINUE SHOPPING", "تابع التسوق")}</Link><div className="oryzo-legal mt-8 text-[#737373]">CASH ON DELIVERY • PAYMOB • 14-DAY RETURNS</div></div>;
 
   return (
-    <div className="w-full px-6 md:px-10 mt-6 bg-[#100904] text-[#ffedd7]">
+    <div className="w-full px-6 md:px-10 mt-6 bg-[#000000] text-[#ffffff]">
       <Breadcrumb items={[{ labelEn: "Shopping Bag", labelAr: "حقيبة التسوق" }]} />
       <div className="flex items-center gap-2 text-xs font-bold mt-2">
         <span className="bg-black text-white px-2 py-0.5 rounded">1. {t("Bag", "العربة")}</span><span>›</span><span className="text-zinc-400">2. {t("Details & Payment", "التفاصيل")}</span><span>›</span><span className="text-zinc-400">3. {t("Done", "تم")}</span>

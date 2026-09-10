@@ -3,16 +3,16 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#100904] text-[#ffedd7] mt-12 relative overflow-hidden border-t border-dashed border-[#40372e]">
+    <footer className="bg-[#000000] text-[#ffffff] mt-12 relative overflow-hidden border-t border-dashed border-[#262626]">
       <div className="relative w-full px-6 md:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-[18px] text-sm">
         <div className="text-left">
           <MuseWearLogo light />
-          <p className="mt-3 text-[#ffedd7]/70 leading-relaxed text-[14px] font-medium uppercase">EGYPT&apos;S CURATED MULTIBRAND DESTINATION + OUR OWN CAIRO FACTORY.</p>
+          <p className="mt-3 text-[#ffffff]/70 leading-relaxed text-[14px] font-medium uppercase">EGYPT&apos;S CURATED MULTIBRAND DESTINATION + OUR OWN CAIRO FACTORY.</p>
           <div className="mt-4 flex gap-2">
-            <span className="w-8 h-8 rounded-full bg-[#382416] border border-[#40372e] text-[#ffedd7] grid place-items-center font-medium text-[12px]" aria-hidden>M</span>
-            <span className="w-8 h-8 rounded-full border border-[#40372e] grid place-items-center text-[12px] hover:bg-[#ffedd7] hover:text-[#100904] transition">IG</span>
-            <span className="w-8 h-8 rounded-full border border-[#40372e] grid place-items-center text-[12px] hover:bg-[#ffedd7] hover:text-[#100904] transition">FB</span>
-            <span className="w-8 h-8 rounded-full border border-[#40372e] grid place-items-center text-[12px] hover:bg-[#ffedd7] hover:text-[#100904] transition">TK</span>
+            <span className="w-8 h-8 rounded-full bg-[#171717] border border-[#262626] text-[#ffffff] grid place-items-center font-medium text-[12px]" aria-hidden>M</span>
+            <span className="w-8 h-8 rounded-full border border-[#262626] grid place-items-center text-[12px] hover:bg-[#ffffff] hover:text-[#000000] transition">IG</span>
+            <span className="w-8 h-8 rounded-full border border-[#262626] grid place-items-center text-[12px] hover:bg-[#ffffff] hover:text-[#000000] transition">FB</span>
+            <span className="w-8 h-8 rounded-full border border-[#262626] grid place-items-center text-[12px] hover:bg-[#ffffff] hover:text-[#000000] transition">TK</span>
           </div>
         </div>
         <div className="text-left">
@@ -38,17 +38,17 @@ export default function Footer() {
         </div>
         <div className="text-left">
           <div className="oryzo-label mb-3">META</div>
-          <p className="text-[#ffedd7]/70 text-[12px] font-medium uppercase leading-relaxed">CATALOG SYNCED TO FACEBOOK & INSTAGRAM SHOP.</p>
+          <p className="text-[#ffffff]/70 text-[12px] font-medium uppercase leading-relaxed">CATALOG SYNCED TO FACEBOOK & INSTAGRAM SHOP.</p>
           <div className="mt-3 flex gap-2 oryzo-label">
             <Link href="/admin" className="btn-ghost !text-[10px]">IG SHOP</Link>
             <Link href="/admin" className="btn-ghost !text-[10px]">FB CATALOG</Link>
           </div>
-          <div className="oryzo-legal mt-4 text-[#6c5f51]">* META COMMERCE SYNC</div>
+          <div className="oryzo-legal mt-4 text-[#737373]">* META COMMERCE SYNC</div>
         </div>
       </div>
-      <div className="relative border-t border-dashed border-[#40372e] text-center oryzo-label py-4 text-[#ffedd7]/70 flex items-center justify-center gap-2 px-4">
+      <div className="relative border-t border-dashed border-[#262626] text-center oryzo-label py-4 text-[#ffffff]/70 flex items-center justify-center gap-2 px-4">
         <span>© 2026 MUSE WEAR EGYPT. ALL RIGHTS RESERVED.</span>
-        <span className="hidden sm:inline text-[#6c5f51]">•</span>
+        <span className="hidden sm:inline text-[#737373]">•</span>
         <span className="hidden sm:inline">EGP • ENGLISH | العربية • <Link href="/login" className="ember-credit underline">SIGN IN</Link></span>
       </div>
     </footer>

@@ -59,15 +59,15 @@ export default function ProductClient({ id }: { id: string }) {
   const recent = products.filter((x) => recentIds.includes(x.id) && x.id !== p.id).slice(0, 4);
 
   return (
-    <div className="w-full px-6 md:px-10 mt-6 pb-24 lg:pb-0 bg-[#100904] text-[#ffedd7]">
+    <div className="w-full px-6 md:px-10 mt-6 pb-24 lg:pb-0 bg-[#000000] text-[#ffffff]">
       <Breadcrumb items={[{ labelEn: p.category === "men" ? "Men" : p.category === "women" ? "Women" : "Accessories", labelAr: p.category === "men" ? "رجالي" : p.category === "women" ? "نسائي" : "إكسسوارات", href: categoryHref }, { labelEn: p.subcategory, labelAr: p.subcategory }, { labelEn: p.nameEn, labelAr: p.nameAr }]} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
         <div>
-          <div className="bg-[#100904] border border-[#40372e] aspect-[4/5] overflow-hidden rounded-[12px] relative">
+          <div className="bg-[#000000] border border-[#262626] aspect-[4/5] overflow-hidden rounded-[12px] relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.images[activeImg] || p.image} alt={name} className="w-full h-full object-cover" />
-            {discount > 0 && <span className="absolute top-3 left-3 text-[12px] font-medium uppercase text-[#dc5000]">-{discount}%</span>}
-            <span className="absolute top-3 right-3 text-[12px] font-medium uppercase px-2 py-1 rounded-full border border-[#40372e] bg-[#100904]/80 text-[#ffedd7]">{stockInfo.status==="out"? t("OUT OF STOCK","نفذ") : stockInfo.status==="low"? t(`LOW STOCK — ${stockInfo.stock} LEFT`,`كمية قليلة — ${stockInfo.stock} متبقي`) : t("IN STOCK","متوفر")}</span>
+            {discount > 0 && <span className="absolute top-3 left-3 text-[12px] font-medium uppercase text-[#ffffff]">-{discount}%</span>}
+            <span className="absolute top-3 right-3 text-[12px] font-medium uppercase px-2 py-1 rounded-full border border-[#262626] bg-[#000000]/80 text-[#ffffff]">{stockInfo.status==="out"? t("OUT OF STOCK","نفذ") : stockInfo.status==="low"? t(`LOW STOCK — ${stockInfo.stock} LEFT`,`كمية قليلة — ${stockInfo.stock} متبقي`) : t("IN STOCK","متوفر")}</span>
           </div>
           {p.images.length > 1 && (
             <div className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
@@ -81,13 +81,13 @@ export default function ProductClient({ id }: { id: string }) {
           )}
         </div>
         <div>
-          <div className="oryzo-label text-[#6c5f51] flex items-center gap-2">{p.brand} {p.isMuseMade && <span className="bg-[#382416] border border-[#40372e] text-[#ffedd7] px-2 py-0.5 text-[10px] rounded-full uppercase">MUSE MANUFACTURED</span>} {p.isNew && <span className="bg-[#ffedd7] text-[#100904] px-2 py-0.5 text-[10px] rounded-full uppercase">NEW</span>}</div>
+          <div className="oryzo-label text-[#737373] flex items-center gap-2">{p.brand} {p.isMuseMade && <span className="bg-[#171717] border border-[#262626] text-[#ffffff] px-2 py-0.5 text-[10px] rounded-full uppercase">MUSE MANUFACTURED</span>} {p.isNew && <span className="bg-[#ffffff] text-[#000000] px-2 py-0.5 text-[10px] rounded-full uppercase">NEW</span>}</div>
           <h1 className="oryzo-heading !text-[41px] mt-3 text-left uppercase">{name}</h1>
           <div className="mt-3 flex items-baseline gap-3">
             <span className="text-2xl font-medium uppercase">{formatEGP(p.price)}</span>
-            {p.originalPrice && <span className="line-through text-[#6c5f51]">{formatEGP(p.originalPrice)}</span>}
+            {p.originalPrice && <span className="line-through text-[#737373]">{formatEGP(p.originalPrice)}</span>}
           </div>
-          <div className="oryzo-label mt-2 flex flex-wrap gap-2 text-[#ffedd7]/80"><span>✓ {t("CASH ON DELIVERY","الدفع عند الاستلام")}</span><span className="text-[#6c5f51]">•</span><span>{t("PAYMOB X-PAY","Paymob")}</span><span className="text-[#6c5f51]">•</span><span>{t("14-DAY RETURNS","إرجاع 14 يوم")}</span></div>
+          <div className="oryzo-label mt-2 flex flex-wrap gap-2 text-[#ffffff]/80"><span>✓ {t("CASH ON DELIVERY","الدفع عند الاستلام")}</span><span className="text-[#737373]">•</span><span>{t("PAYMOB X-PAY","Paymob")}</span><span className="text-[#737373]">•</span><span>{t("14-DAY RETURNS","إرجاع 14 يوم")}</span></div>
 
           {/* Colors */}
           <div className="mt-6">
@@ -108,7 +108,7 @@ export default function ProductClient({ id }: { id: string }) {
                   const st = getVariantStock(p, s);
                   const disabled = st.status==="out";
                   return (
-                    <button key={s} aria-pressed={size === s} disabled={disabled} onClick={() => setSize(s)} className={`px-5 py-2 border text-sm font-medium uppercase rounded-[22.5px] focus:outline-none focus:ring-2 focus:ring-[#ffedd7] ${disabled?"bg-transparent text-[#6c5f51] border-[#40372e] cursor-not-allowed line-through": size === s ? "bg-[#382416] text-[#ffedd7] border-[#ffedd7]" : "bg-transparent text-[#ffedd7] border-[#40372e] hover:border-[#ffedd7]"}`}>{s}</button>
+                    <button key={s} aria-pressed={size === s} disabled={disabled} onClick={() => setSize(s)} className={`px-5 py-2 border text-sm font-medium uppercase rounded-[22.5px] focus:outline-none focus:ring-2 focus:ring-[#ffffff] ${disabled?"bg-transparent text-[#737373] border-[#262626] cursor-not-allowed line-through": size === s ? "bg-[#171717] text-[#ffffff] border-[#ffffff]" : "bg-transparent text-[#ffffff] border-[#262626] hover:border-[#ffffff]"}`}>{s}</button>
                   );
                 })}
               </div>
@@ -159,7 +159,7 @@ export default function ProductClient({ id }: { id: string }) {
       )}
 
       {/* Sticky mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#100904] border-t border-dashed border-[#40372e] p-3 flex gap-3 z-40">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#000000] border-t border-dashed border-[#262626] p-3 flex gap-3 z-40">
         <button onClick={handleAdd} disabled={!canAdd || stockInfo.status==="out"} className="btn-pill flex-1 disabled:opacity-50">{stockInfo.status==="out"? t("OUT OF STOCK","نفذ") : t("ADD TO BAG — ","أضف ") + formatEGP(p.price)}</button>
         <button onClick={handleWishlist} className="btn-ghost w-12 h-12 !p-0 grid place-items-center">{has(p.id)?"♥":"♡"}</button>
       </div>

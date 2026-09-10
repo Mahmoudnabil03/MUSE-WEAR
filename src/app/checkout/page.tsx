@@ -119,13 +119,13 @@ function CheckoutInner() {
   };
 
   return (
-    <div className="max-w-[900px] mx-auto px-4 mt-6 bg-[#100904] text-[#ffedd7]">
+    <div className="max-w-[900px] mx-auto px-4 mt-6 bg-[#000000] text-[#ffffff]">
       <div className="flex items-center gap-2 oryzo-label">
-        <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link><span className="text-[#6c5f51]">›</span><span className="bg-[#382416] border border-[#40372e] text-[#ffedd7] px-2 py-0.5 rounded-full">2. {t("DETAILS & PAYMENT", "التفاصيل والدفع")}</span><span className="text-[#6c5f51]">›</span><span className="text-[#6c5f51]">{t("CONFIRMATION", "التأكيد")}</span>
+        <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link><span className="text-[#737373]">›</span><span className="bg-[#171717] border border-[#262626] text-[#ffffff] px-2 py-0.5 rounded-full">2. {t("DETAILS & PAYMENT", "التفاصيل والدفع")}</span><span className="text-[#737373]">›</span><span className="text-[#737373]">{t("CONFIRMATION", "التأكيد")}</span>
       </div>
       <h1 className="oryzo-heading mt-3 text-left">{t("CHECKOUT", "الدفع")}</h1>
-      <div className="oryzo-label mt-2 text-[#6c5f51]"><Link href="/" className="link-underline">{t("HOME", "الرئيسية")}</Link> › <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link> › {t("CHECKOUT", "الدفع")}</div>
-      <p className="oryzo-label mt-2 text-[#6c5f51]">{t("GUEST CHECKOUT — NO ACCOUNT REQUIRED.", "دفع كضيف — لا يلزم حساب.")}</p>
+      <div className="oryzo-label mt-2 text-[#737373]"><Link href="/" className="link-underline">{t("HOME", "الرئيسية")}</Link> › <Link href="/cart" className="link-underline">{t("CART", "العربة")}</Link> › {t("CHECKOUT", "الدفع")}</div>
+      <p className="oryzo-label mt-2 text-[#737373]">{t("GUEST CHECKOUT — NO ACCOUNT REQUIRED.", "دفع كضيف — لا يلزم حساب.")}</p>
 
       <div className="mt-6 grid lg:grid-cols-[1fr_360px] gap-6">
         <div className="card-oryzo grid gap-4 h-fit">

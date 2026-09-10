@@ -13,7 +13,7 @@ export default function Home() {
   const sale = products.filter((p) => p.originalPrice);
 
   return (
-    <div className="overflow-x-hidden bg-[#0a0a0a] text-[#ffedd7]">
+    <div className="overflow-x-hidden bg-[#000000] text-[#ffffff]">
       <Hero />
 
       <hr className="divider-dashed mx-6 md:mx-10 mt-10" />
@@ -26,7 +26,7 @@ export default function Home() {
           [t("SHIPS ACROSS EGYPT", "شحن لكل مصر"), "EGYPT"],
         ].map(([label, badge], i) => (
           <div key={badge} className="card-oryzo px-3 py-2.5 flex items-center gap-2 justify-center text-left animate-fadeInUp" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}>
-            <span className="border border-[#40372e] text-[#ffedd7] px-2 py-0.5 text-[10px] rounded-full font-medium uppercase">{badge}</span> {label}
+            <span className="border border-[#262626] text-[#ffffff] px-2 py-0.5 text-[10px] rounded-full font-medium uppercase">{badge}</span> {label}
           </div>
         ))}
       </div>
@@ -34,14 +34,14 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 mt-16 min-h-[100vh]">
         <div className="card-oryzo p-6 md:p-10 flex flex-col md:flex-row items-start gap-6">
           <div className="relative flex items-center gap-4 shrink-0">
-            <div className="w-16 h-16 bg-black border border-[#2a2a2a] overflow-hidden relative">
+            <div className="w-16 h-16 bg-black border border-[#262626] overflow-hidden relative">
               {/* eslint-disable @next/next/no-img-element */}
               <img src="/mw-logo-inverted.jpg" alt="MW" className="absolute inset-0 w-full h-full object-cover scale-[1.05]" />
             </div>
             <MuseWearLogo light className="hidden md:flex" />
           </div>
           <div className="relative flex-1 text-left">
-            <div className="oryzo-label text-[#ffedd7]/70">EST. CAIRO — MUSE WEAR</div>
+            <div className="oryzo-label text-[#ffffff]/70">EST. CAIRO — MUSE WEAR</div>
             <h3 className="oryzo-heading mt-3 text-left">NOT JUST A STORE. A MOVEMENT.</h3>
             <p className="oryzo-body mt-4 max-w-2xl text-left !text-[18px] !leading-[1.4]">
               {t("Egypt's first hybrid: curated multibrand marketplace + our own Cairo factory. The MW mark is cut for motion — sharp M above, grounded W below.", "أول هجين في مصر: سوق متعدد الماركات + مصنعنا في القاهرة. علامة MW مصممة للحركة — M حادة بالأعلى، W راسخة بالأسفل.")}
@@ -58,22 +58,22 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 py-16 min-h-[100vh]">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="oryzo-heading text-left">{t("SHOP BY CATEGORY", "تسوق حسب الفئة")}</h2>
-          <span className="oryzo-label hidden md:block text-[#6c5f51]">{t("MEN • WOMEN • ACCESSORIES — ALL IN EGP", "رجالي • نسائي • إكسسوارات — كلها بالجنيه")}</span>
+          <span className="oryzo-label hidden md:block text-[#737373]">{t("MEN • WOMEN • ACCESSORIES — ALL IN EGP", "رجالي • نسائي • إكسسوارات — كلها بالجنيه")}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px] mt-8">
           {categories.map((c, i) => (
-            <Link key={c.key} href={`/${c.key}`} className="relative overflow-hidden h-[420px] group bg-[#0a0a0a] border border-[#2a2a2a] rounded-[12px] animate-fadeInUp" style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}>
+            <Link key={c.key} href={`/${c.key}`} className="relative overflow-hidden h-[420px] group bg-[#000000] border border-[#262626] rounded-[12px] animate-fadeInUp" style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.image} alt={c.labelEn} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-[1000ms]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/20 to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 text-[#ffedd7] flex items-end justify-between">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/20 to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 text-[#ffffff] flex items-end justify-between">
                 <div className="text-left">
                   <div className="oryzo-heading-sm">{lang === "ar" ? c.labelAr : c.labelEn}</div>
                   <div className="oryzo-label mt-2 opacity-80 group-hover:opacity-100 flex items-center gap-2">
                     {t("SHOP NOW", "تسوق الآن")} <span className="group-hover:translate-x-1 transition">→</span>
                   </div>
                 </div>
-                <span className="w-10 h-10 rounded-full bg-[#ffedd7] text-[#100904] grid place-items-center font-medium group-hover:scale-110 transition">↗</span>
+                <span className="w-10 h-10 rounded-full bg-[#ffffff] text-[#000000] grid place-items-center font-medium group-hover:scale-110 transition">↗</span>
               </div>
             </Link>
           ))}
@@ -85,7 +85,7 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 py-16">
         <div className="card-oryzo overflow-hidden">
           <div className="oryzo-label flex items-center gap-2 text-left">
-            <span className="w-2 h-2 bg-[#ffedd7] animate-pulse" /> {t("SHOP BY BRAND", "تسوق حسب الماركة")}
+            <span className="w-2 h-2 bg-[#ffffff] animate-pulse" /> {t("SHOP BY BRAND", "تسوق حسب الماركة")}
           </div>
           <div className="flex gap-3 mt-4 overflow-x-auto no-scrollbar">
             {brands.map((b, i) => (
@@ -119,8 +119,8 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 py-16 min-h-[100vh]">
         <div className="card-oryzo p-6 md:p-8 flex flex-col md:flex-row md:items-start justify-between gap-6 relative overflow-hidden">
           <div className="relative text-left">
-            <div className="oryzo-label text-[#ffedd7]/70 flex items-center gap-2">
-              <span className="w-6 h-[1px] bg-[#6c5f51]" /> MUSE WEAR • {t("OUR MANUFACTURING", "صناعتنا")}
+            <div className="oryzo-label text-[#ffffff]/70 flex items-center gap-2">
+              <span className="w-6 h-[1px] bg-[#737373]" /> MUSE WEAR • {t("OUR MANUFACTURING", "صناعتنا")}
             </div>
             <h3 className="oryzo-heading mt-3 text-left">{t("MUSE MANUFACTURED ESSENTIALS", "أساسيات من صناعة موس")}</h3>
             <p className="oryzo-body mt-4 max-w-xl text-left !text-[18px] !leading-[1.4]">{t("Heavyweight tees, cargos, sets — Made in Egypt, designed in Cairo. The MW shield is woven into every stitch.", "تيشيرتات ثقيلة، كارجو، أطقم — صنع في مصر، تصميم القاهرة. درع MW منسوج في كل غرزة.")}</p>
@@ -141,9 +141,9 @@ export default function Home() {
       <section className="w-full px-6 md:px-10 py-16">
         <div className="flex items-center gap-3">
           <h2 className="oryzo-heading text-left">SALE</h2>
-          <span className="h-6 w-[1px] bg-[#40372e]" />
+          <span className="h-6 w-[1px] bg-[#262626]" />
           <span className="oryzo-label">{t("UP TO 50% OFF", "حتى 50% خصم")}</span>
-          <span className="ml-auto oryzo-label border border-dashed border-[#40372e] rounded-full px-3 py-1">⏰ {t("LIMITED TIME", "لفترة محدودة")}</span>
+          <span className="ml-auto oryzo-label border border-dashed border-[#262626] rounded-full px-3 py-1">⏰ {t("LIMITED TIME", "لفترة محدودة")}</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px] mt-8">
           {sale.map((p, i) => (
@@ -165,12 +165,12 @@ export default function Home() {
           )}
         </p>
         <div className="mt-6 flex flex-wrap gap-[18px] oryzo-label">
-          <span className="border border-[#40372e] px-3 py-1 rounded-full">EGP {formatEGP(899).replace("EGP", "")}</span>
-          <span className="border border-dashed border-[#40372e] px-3 py-1 rounded-full">COD AVAILABLE</span>
-          <span className="border border-dashed border-[#40372e] px-3 py-1 rounded-full">PAYMOB X-PAY</span>
-          <span className="border border-dashed border-[#40372e] px-3 py-1 rounded-full">14-DAY RETURNS</span>
+          <span className="border border-[#262626] px-3 py-1 rounded-full">EGP {formatEGP(899).replace("EGP", "")}</span>
+          <span className="border border-dashed border-[#262626] px-3 py-1 rounded-full">COD AVAILABLE</span>
+          <span className="border border-dashed border-[#262626] px-3 py-1 rounded-full">PAYMOB X-PAY</span>
+          <span className="border border-dashed border-[#262626] px-3 py-1 rounded-full">14-DAY RETURNS</span>
         </div>
-        <div className="oryzo-legal mt-6 text-[#6c5f51] text-left">* PRICES INCLUDE VAT WHERE APPLICABLE</div>
+        <div className="oryzo-legal mt-6 text-[#737373] text-left">* PRICES INCLUDE VAT WHERE APPLICABLE</div>
       </section>
     </div>
   );

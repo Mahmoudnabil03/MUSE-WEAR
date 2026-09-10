@@ -11,7 +11,7 @@ export function MWMark({
 }) {
   // Geometric MW mark — now pixel-perfect from the official jpg (public/mw-logo.jpg)
   // withText=false renders the square mark only; withText=true renders mark + wordmark.
-  // On the dark ORYZO ground (#100904) we invert to white so the black mark reads as luxury emboss.
+  // On the dark ORYZO ground (#000000) we invert to white so the black mark reads as luxury emboss.
   const src = invert ? "/mw-logo-inverted.jpg" : "/mw-logo.jpg";
   return (
     <div
@@ -39,14 +39,14 @@ export function MuseWearLogo({
   light?: boolean;
   compact?: boolean;
 }) {
-  // light=true → white mark for use on #100904 / black grounds (header, footer, hero)
+  // light=true → white mark for use on #000000 / black grounds (header, footer, hero)
   if (compact) {
     return (
       <div className={`flex items-center gap-3 ${className}`}>
         <MWMark className="w-10 h-10" invert={light} withText={false} />
-        <div className={`leading-none ${light ? "text-[#ffedd7]" : "text-black"}`}>
+        <div className={`leading-none ${light ? "text-[#ffffff]" : "text-black"}`}>
           <div className="font-medium tracking-[0.22em] text-[14px] uppercase">MUSE WEAR</div>
-          <div className={`text-[9px] tracking-[0.32em] font-medium uppercase ${light ? "text-[#ffedd7]/70" : "text-black/60"}`}>
+          <div className={`text-[9px] tracking-[0.32em] font-medium uppercase ${light ? "text-[#ffffff]/70" : "text-black/60"}`}>
             CAIRO, EGYPT
           </div>
         </div>

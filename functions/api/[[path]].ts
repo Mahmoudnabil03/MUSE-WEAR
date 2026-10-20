@@ -1,5 +1,6 @@
 import { forwardOrder } from "../../src/lib/server/fulfillment";
-interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string; TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string; TAAGER_MERCHANT_EMAIL?: string; TAAGER_MERCHANT_PASSWORD?: string; TAAGER_FIREBASE_API_KEY?: string; TAAGER_FIREBASE_ID_TOKEN?: string; TAAGER_MERCHANT_API_URL?: string; TAAGER_WEBHOOK_URL?: string; TAAGER_DUKAN_URL?: string; TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string }
+import { bestPrice, checkConnection, listProducts, toTaagerRaw } from "../../src/lib/server/taagerClient";
+interface Env { DB: D1Database; META_CAPI_TOKEN?: string; META_PIXEL_ID?: string; FB_CAPI_TOKEN?: string; META_CONVERSIONS_API_TOKEN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string; TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string; TAAGER_DUKAN_API_URL?: string; TAAGER_DUKAN_ORIGIN?: string; TAAGER_STORE_COUNTRY?: string; TAAGER_MERCHANT_EMAIL?: string; TAAGER_MERCHANT_PASSWORD?: string; TAAGER_FIREBASE_API_KEY?: string; TAAGER_FIREBASE_ID_TOKEN?: string; TAAGER_MERCHANT_API_URL?: string; TAAGER_WEBHOOK_URL?: string; TAAGER_DUKAN_URL?: string; TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string }
 interface D1Database { prepare(sql: string): D1PreparedStatement }
 interface D1PreparedStatement { bind(...values: unknown[]): D1PreparedStatement; first<T = unknown>(): Promise<T | null>; all<T = unknown>(): Promise<{ results: T[] }>; run(): Promise<unknown> }
 interface PagesContext { request: Request; env: Env; params: Record<string, string | string[] | undefined> }
@@ -207,8 +208,19 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     const current = await user(request, env);
     if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
     const data = await body(request);
-    const incoming = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
-    if (!incoming.length) return json({ error: "No products provided. Upload Taager export (JSON array) or connect Taager API." }, 400);
+    let incoming = Array.isArray(data.products) ? data.products as Array<Record<string, unknown>> : Array.isArray(data) ? data as Array<Record<string, unknown>> : [];
+    // No payload supplied → pull the live catalog from the connected Taager store.
+    let source = "upload";
+    if (!incoming.length) {
+      try {
+        const page = await listProducts(env as unknown as Record<string, string | undefined>, { page: 1, pageSize: 100 });
+        incoming = page.products.map((p) => toTaagerRaw(p));
+        source = "taager_api";
+      } catch (e) {
+        return json({ error: `No products provided and Taager fetch failed: ${String(e)}` }, 400);
+      }
+    }
+    if (!incoming.length) return json({ error: "No products to import (Taager catalog returned nothing)." }, 400);
     // Normalize merchant-API variant shapes (financials/merchantInfo/color-size objects/images)
     // into the flat shape the pipeline expects. Passes through flat objects unchanged.
     const normStr = (v: unknown) => (v == null ? "" : String(v));
@@ -322,6 +334,43 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
       } catch {}
     }
     return json({ ok: true, imported, stats: { totalRaw: raw.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
+  }
+  // --- Taager connection status (admin only, read-only health check) ---
+  if (path === "taager/status" && request.method === "GET") {
+    const current = await user(request, env);
+    if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const status = await checkConnection(env as unknown as Record<string, string | undefined>);
+    let sample: unknown = null;
+    try {
+      if (status.ok) sample = await listProducts(env as unknown as Record<string, string | undefined>, { page: 1, pageSize: 3 });
+    } catch {}
+    return json({ status, sample });
+  }
+  // --- Taager catalog sync (admin only): pull the live Taager store catalog ---
+  if (path === "taager/sync" && request.method === "POST") {
+    const current = await user(request, env);
+    if (!current || current.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const data = await body(request);
+    const page = Number(data.page || 1) || 1;
+    const pageSize = Math.min(100, Number(data.pageSize || 30) || 30);
+    try {
+      const result = await listProducts(env as unknown as Record<string, string | undefined>, { page, pageSize });
+      const products = result.products.map((p) => ({
+        taagerProductId: p.id,
+        taagerSku: p.id,
+        name: p.name,
+        category: p.category,
+        price: bestPrice(p),
+        images: p.images.map((i) => i.original).filter(Boolean),
+        thumbnails: p.images.map((i) => i.thumbnail).filter(Boolean),
+        slug: p.slug,
+        featured: p.featured,
+        onSale: p.onSale,
+      }));
+      return json({ ok: true, products, pagination: result.pagination });
+    } catch (e) {
+      return json({ error: String(e) }, 502);
+    }
   }
   // --- Shipping zones (public) ---
   if (path === "shipping" && request.method === "GET") {

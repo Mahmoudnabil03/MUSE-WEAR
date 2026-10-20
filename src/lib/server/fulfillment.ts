@@ -30,9 +30,59 @@ export type ForwardOrder = {
   payment_method: string;
 };
 
-type EnvLike = Record<string, string | undefined> & { TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string; TAAGER_MERCHANT_EMAIL?: string; TAAGER_MERCHANT_PASSWORD?: string; TAAGER_FIREBASE_API_KEY?: string; TAAGER_FIREBASE_ID_TOKEN?: string; TAAGER_MERCHANT_API_URL?: string; TAAGER_WEBHOOK_URL?: string; TAAGER_DUKAN_URL?: string; TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string };
+type EnvLike = Record<string, string | undefined> & { TAAGER_API_URL?: string; TAAGER_API_TOKEN?: string; TAAGER_STORE_ID?: string; TAAGER_DUKAN_API_URL?: string; TAAGER_DUKAN_ORIGIN?: string; TAAGER_STORE_COUNTRY?: string; TAAGER_MERCHANT_EMAIL?: string; TAAGER_MERCHANT_PASSWORD?: string; TAAGER_FIREBASE_API_KEY?: string; TAAGER_FIREBASE_ID_TOKEN?: string; TAAGER_MERCHANT_API_URL?: string; TAAGER_WEBHOOK_URL?: string; TAAGER_DUKAN_URL?: string; TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string };
 
 export type ForwardResult = { ok: boolean; strategy: string; taagerOrderId?: string; httpStatus?: number; body?: unknown; error?: string };
+
+// 1b. Taager Dukan API — verified live integration. Uses the Taager store API
+//     key (TK-...) in the `apiKey` body field and the storefront Origin header.
+async function tryTaagerDukanApi(env: EnvLike, order: ForwardOrder): Promise<ForwardResult | null> {
+  const apiUrl = env.TAAGER_DUKAN_API_URL?.trim() || "https://api.dukan.shop/api";
+  const storeOrigin = env.TAAGER_DUKAN_ORIGIN?.trim() || env.TAAGER_DUKAN_URL?.trim() || "https://muse-wear.pages.dev";
+  const token = env.TAAGER_API_TOKEN?.trim();
+  if (!token) return null;
+  const { createOrder, toProvinceId } = await import("./taagerClient");
+  const dukanEnv = {
+    TAAGER_DUKAN_API_URL: apiUrl,
+    TAAGER_DUKAN_ORIGIN: storeOrigin,
+    TAAGER_API_TOKEN: token,
+    TAAGER_STORE_COUNTRY: env.TAAGER_STORE_COUNTRY || "EG",
+    TAAGER_STORE_LANGUAGE: "en",
+  };
+  try {
+    const res = await createOrder(dukanEnv, {
+      items: order.items.map((i) => ({
+        productId: i.taager_product_id || i.sku,
+        productName: i.title || i.sku,
+        quantity: i.quantity,
+        unitPrice: i.unit_price,
+        subtotal: Math.round(i.unit_price * i.quantity * 100) / 100,
+      })),
+      subtotal: order.subtotal,
+      codFee: 0,
+      total: order.total,
+      deliveryInfo: {
+        name: order.customer.name,
+        email: order.customer.email || null,
+        phone: order.customer.phone,
+        address: order.customer.address,
+        provinceId: toProvinceId(order.customer.governorate),
+        zoneId: null,
+        districtId: null,
+        notes: null,
+        saudiNationalAddress: null,
+        countryIsoCode2: (env.TAAGER_STORE_COUNTRY || "EG").toUpperCase(),
+      },
+      isPrePayment: order.payment_method === "paymob",
+      metadata: { externalId: order.orderId, source: "muse-wear" },
+    });
+    return { ok: true, strategy: "taager_dukan_api", taagerOrderId: res.orderId, body: res.raw };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const status = (e as { status?: number })?.status;
+    return { ok: false, strategy: "taager_dukan_api", httpStatus: status, error: msg };
+  }
+}
 
 const TAAGER_MERCHANT_CANDIDATES = [
   "/api/orders",
@@ -181,7 +231,7 @@ async function tryTelegram(env: EnvLike, order: ForwardOrder): Promise<ForwardRe
 
 export async function forwardOrder(env: EnvLike, order: ForwardOrder): Promise<ForwardResult> {
   const attempts: ForwardResult[] = [];
-  for (const fn of [tryTaagerApi, tryMerchantApi, tryDukanStorefront, tryWebhook]) {
+  for (const fn of [tryTaagerApi, tryTaagerDukanApi, tryMerchantApi, tryDukanStorefront, tryWebhook]) {
     const r = await fn(env, order);
     if (!r) continue;
     if (r.ok) return r;

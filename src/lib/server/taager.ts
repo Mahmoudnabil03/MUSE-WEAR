@@ -121,7 +121,7 @@ function isMuseManufactured(p: TaagerRawProduct): boolean {
 /**
  * Normalize a Taager merchant-API variant object (merchant.api.taager.com
  * /api/products/variants shape: financials, merchantInfo, color/size objects,
- * productPicture/extraImage*/additionalMedia) into TaagerRawProduct.
+ * productPicture, extraImage1..6, additionalMedia) into TaagerRawProduct.
  * Also passes through already-normalized objects unchanged.
  */
 export function normalizeMerchantItem(item: Record<string, unknown>): TaagerRawProduct {

@@ -38,7 +38,7 @@ export type ForwardResult = { ok: boolean; strategy: string; taagerOrderId?: str
 //     key (TK-...) in the `apiKey` body field and the storefront Origin header.
 async function tryTaagerDukanApi(env: EnvLike, order: ForwardOrder): Promise<ForwardResult | null> {
   const apiUrl = env.TAAGER_DUKAN_API_URL?.trim() || "https://api.dukan.shop/api";
-  const storeOrigin = env.TAAGER_DUKAN_ORIGIN?.trim() || env.TAAGER_DUKAN_URL?.trim() || "https://muse-wear.pages.dev";
+  const storeOrigin = env.TAAGER_DUKAN_ORIGIN?.trim() || env.TAAGER_DUKAN_URL?.trim() || "https://musewear.dukan.shop";
   const token = env.TAAGER_API_TOKEN?.trim();
   if (!token) return null;
   const { createOrder, toProvinceId } = await import("./taagerClient");

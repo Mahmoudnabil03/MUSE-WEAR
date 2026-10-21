@@ -15,14 +15,14 @@
 
 export type TaagerEnv = {
   TAAGER_DUKAN_API_URL?: string; // default https://api.dukan.shop/api
-  TAAGER_DUKAN_ORIGIN?: string; // default https://muse-wear.pages.dev
+  TAAGER_DUKAN_ORIGIN?: string; // default https://musewear.dukan.shop
   TAAGER_API_TOKEN?: string; // TK-... store API key
   TAAGER_STORE_COUNTRY?: string; // ISO-3166 alpha-2, default EG
   TAAGER_STORE_LANGUAGE?: string; // default en
 };
 
 export const DEFAULT_TAAGER_API_URL = "https://api.dukan.shop/api";
-export const DEFAULT_TAAGER_ORIGIN = "https://muse-wear.pages.dev";
+export const DEFAULT_TAAGER_ORIGIN = "https://musewear.dukan.shop";
 
 export type TaagerProduct = {
   id: string;

@@ -20,6 +20,22 @@ type DbProduct = {
   stockQty?: number;
 };
 
+type TaagerStatus = {
+  ok: boolean;
+  apiUrl: string;
+  origin: string;
+  tokenConfigured: boolean;
+  productCount?: number;
+  sampleProduct?: string;
+  error?: string;
+};
+
+type TaagerResult = {
+  ok: boolean;
+  imported: number;
+  stats: { totalRaw: number; afterFilter: number; excludedMuse: number; excludedNonClothing: number; duplicateGroups: number; uniqueCount: number };
+};
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -29,6 +45,10 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [taagerBusy, setTaagerBusy] = useState(false);
+  const [taagerError, setTaagerError] = useState("");
+  const [taagerResult, setTaagerResult] = useState<TaagerResult | null>(null);
+  const [taagerStatus, setTaagerStatus] = useState<TaagerStatus | null>(null);
 
   // form state
   const [title, setTitle] = useState("");
@@ -54,6 +74,29 @@ export default function AdminPage() {
     } catch { setDbProducts(null); }
   };
   useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => {
+    fetch("/api/taager/status", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setTaagerStatus(data.status || null))
+      .catch(() => {});
+  }, []);
+
+  const handleTaagerSync = async () => {
+    setTaagerBusy(true); setTaagerError(""); setTaagerResult(null);
+    try {
+      const res = await fetch("/api/taager/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Taager sync failed");
+      setTaagerResult(data);
+      fetchProducts();
+    } catch (e: any) {
+      setTaagerError(e.message || "Taager sync failed");
+    } finally { setTaagerBusy(false); }
+  };
 
   const displayProducts: DbProduct[] = dbProducts ?? (demoProducts as unknown as DbProduct[]);
   const museCount = displayProducts.filter((p) => p.isMuseMade).length;
@@ -217,6 +260,35 @@ export default function AdminPage() {
               <button className="bg-black text-white px-5 py-2.5 rounded-full font-bold text-sm">Sync → Meta Catalog</button>
               <button className="border border-zinc-300 px-5 py-2.5 rounded-full font-bold text-sm">Download CSV</button>
             </div>
+          </div>
+
+          {/* Taager Catalog Sync card */}
+          <div className="mt-8 bg-white border border-zinc-200 rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-black">Taager Catalog Sync</h3>
+                <p className="text-sm text-zinc-600 mt-1">Pull the live catalog from your connected Taager store. A 50% margin is applied automatically; MUSE-manufactured and non-clothing items are skipped.</p>
+                {taagerStatus && (
+                  <p className={`text-xs font-bold mt-2 ${taagerStatus.ok ? "text-green-600" : "text-red-600"}`}>
+                    {taagerStatus.ok
+                      ? `Connected • ${taagerStatus.productCount ?? 0} product(s) in store`
+                      : `Not connected: ${taagerStatus.error || "check TAAGER_API_TOKEN"}`}
+                  </p>
+                )}
+              </div>
+              <button onClick={handleTaagerSync} disabled={taagerBusy} className="bg-black text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-zinc-800 disabled:opacity-60 self-start sm:self-auto whitespace-nowrap">
+                {taagerBusy ? "Syncing…" : "Sync Catalog from Taager"}
+              </button>
+            </div>
+            {taagerError && <div className="mt-3 bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">{taagerError}</div>}
+            {taagerResult && (
+              <div className="mt-3 bg-zinc-50 border border-zinc-200 text-sm px-4 py-3 rounded-xl">
+                <span className="font-bold">Imported {taagerResult.imported} product(s).</span>{" "}
+                <span className="text-zinc-500">
+                  Raw {taagerResult.stats.totalRaw} • after filter {taagerResult.stats.afterFilter} • duplicates merged {taagerResult.stats.duplicateGroups} • excluded MUSE {taagerResult.stats.excludedMuse} • non-clothing {taagerResult.stats.excludedNonClothing}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Add Product Modal */}

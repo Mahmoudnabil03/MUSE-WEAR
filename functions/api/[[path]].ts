@@ -312,28 +312,40 @@ export const onRequest = async ({ request, env, params }: PagesContext) => {
     if (path === "taager/preview") {
       return json({ unique, stats: { totalRaw: raw.length, afterFilter: filtered.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
     }
-    // Import: insert into D1 products
-    let imported = 0;
+    // Import: upsert into D1, keyed on the Taager product id so re-syncing
+    // updates instead of duplicating. The legacy merchant import already used
+    // the Taager id as the product id, so this also refreshes those rows.
+    let imported = 0, updated = 0;
     for (const u of unique) {
-      const pid = id();
       const title = String(u.productName);
       const images = JSON.stringify([u.image, ...((u.additionalImages as string[])||[])].filter(Boolean));
       const price = Number(u.finalSellingPrice);
-      const sku = `TAAGER-${String(u.vendorId).slice(0,6).toUpperCase()}-${pid.slice(0,6).toUpperCase()}`;
+      const brand = String((u as Record<string,unknown>).brand || "Taager");
+      const description = title + " - imported from Taager via trusted vendor " + u.vendorSelected + ". 50% margin applied.";
+      const variants = Array.isArray(u.variants) ? u.variants as Array<Record<string, unknown>> : [];
+      const sizeList = [...new Set(variants.map((v) => String(v.size || "")).filter(Boolean))];
+      const colorList = [...new Set(variants.map((v) => String(v.color || "")).filter(Boolean))];
+      const pid = String(variants[0]?.taagerProductId || "") || id();
       try {
-         const variants = Array.isArray(u.variants) ? u.variants as Array<Record<string, unknown>> : [];
-         const sizeList = [...new Set(variants.map((v) => String(v.size || "")).filter(Boolean))];
-         const colorList = [...new Set(variants.map((v) => String(v.color || "")).filter(Boolean))];
-         await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,variants,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-           .bind(pid, title, `${title} — imported from Taager via trusted vendor ${u.vendorSelected}. 50% margin applied.`, String((u as Record<string,unknown>).brand||"Taager"), null, price, sku, 100, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), 0, 0).run();
-         for (const v of variants as Array<Record<string, unknown>>) {
-           await env.DB.prepare("INSERT INTO product_variants (id,product_id,sku,size,color,stock,price_override,taager_product_id,taager_sku,taager_size,taager_color,taager_price,taager_vendor_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
-             .bind(id(), pid, String(v.taagerSku || v.sku || v.taagerProductId || ""), String(v.size || ""), String(v.color || ""), Number(v.stock || 0), Math.round(Number(v.taagerPrice || 0) * 1.5), String(v.taagerProductId || ""), String(v.taagerSku || v.sku || ""), String(v.size || ""), String(v.color || ""), Number(v.taagerPrice || 0), String(u.vendorId || "")).run();
-         }
-        imported++;
+        const existing = await env.DB.prepare("SELECT id FROM products WHERE id=?").bind(pid).first<{ id: string }>();
+        if (existing) {
+          await env.DB.prepare("UPDATE products SET title=?,description=?,brand=?,price=?,images=?,colors=?,sizes=?,variants=?,updated_at=datetime('now') WHERE id=?")
+            .bind(title, description, brand, price, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), pid).run();
+          await env.DB.prepare("DELETE FROM product_variants WHERE product_id=?").bind(pid).run();
+          updated++;
+        } else {
+          const sku = `TAAGER-${String(u.vendorId).slice(0,6).toUpperCase()}-${pid.slice(0,6).toUpperCase()}`;
+          await env.DB.prepare("INSERT INTO products (id,title,description,brand,category_id,price,sku,stock_qty,images,colors,sizes,variants,is_new,is_muse_made) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+            .bind(pid, title, description, brand, null, price, sku, 100, images, JSON.stringify(colorList), JSON.stringify(sizeList), JSON.stringify(variants), 0, 0).run();
+          imported++;
+        }
+        for (const v of variants) {
+          await env.DB.prepare("INSERT INTO product_variants (id,product_id,sku,size,color,stock,price_override,taager_product_id,taager_sku,taager_size,taager_color,taager_price,taager_vendor_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+            .bind(id(), pid, String(v.taagerSku || v.sku || v.taagerProductId || ""), String(v.size || ""), String(v.color || ""), Number(v.stock || 0), Math.round(Number(v.taagerPrice || 0) * 1.5), String(v.taagerProductId || ""), String(v.taagerSku || v.sku || ""), String(v.size || ""), String(v.color || ""), Number(v.taagerPrice || 0), String(u.vendorId || "")).run();
+        }
       } catch {}
     }
-    return json({ ok: true, imported, stats: { totalRaw: raw.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
+    return json({ ok: true, imported, updated, stats: { totalRaw: raw.length, excludedMuse, excludedNonClothing, duplicateGroups, uniqueCount: unique.length } });
   }
   // --- Taager connection status (admin only, read-only health check) ---
   if (path === "taager/status" && request.method === "GET") {

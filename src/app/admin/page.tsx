@@ -33,6 +33,7 @@ type TaagerStatus = {
 type TaagerResult = {
   ok: boolean;
   imported: number;
+  updated?: number;
   stats: { totalRaw: number; afterFilter: number; excludedMuse: number; excludedNonClothing: number; duplicateGroups: number; uniqueCount: number };
 };
 
@@ -283,7 +284,7 @@ export default function AdminPage() {
             {taagerError && <div className="mt-3 bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">{taagerError}</div>}
             {taagerResult && (
               <div className="mt-3 bg-zinc-50 border border-zinc-200 text-sm px-4 py-3 rounded-xl">
-                <span className="font-bold">Imported {taagerResult.imported} product(s).</span>{" "}
+                <span className="font-bold">Imported {taagerResult.imported} • updated {taagerResult.updated ?? 0} product(s).</span>{" "}
                 <span className="text-zinc-500">
                   Raw {taagerResult.stats.totalRaw} • after filter {taagerResult.stats.afterFilter} • duplicates merged {taagerResult.stats.duplicateGroups} • excluded MUSE {taagerResult.stats.excludedMuse} • non-clothing {taagerResult.stats.excludedNonClothing}
                 </span>

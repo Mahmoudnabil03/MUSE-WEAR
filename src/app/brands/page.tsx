@@ -13,7 +13,7 @@ export default function BrandsPage() {
       <p className="text-sm text-zinc-500">{t("Curated multibrand + MUSE Manufactured", "متعدد الماركات + صناعة موس")}</p>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
         {brands.map((b) => (
-          <Link key={b} href={b==="MUSE WEAR" ? "/muse" : `/search?q=${encodeURIComponent(b)}`} className="bg-white border border-zinc-200 p-8 rounded-2xl hover:border-black hover:shadow-lg transition flex flex-col items-center">
+          <Link key={b} href={b==="MUSE WEAR" ? "/muse" : `/search?q=${encodeURIComponent(b)}`} className="bg-white text-black border border-zinc-200 p-8 rounded-2xl hover:border-black hover:shadow-lg transition flex flex-col items-center">
             <div className="text-xl font-black">{b}</div>
             <div className="text-xs text-zinc-500 mt-1">{t("Shop collection", "تسوق التشكيلة")} →</div>
           </Link>

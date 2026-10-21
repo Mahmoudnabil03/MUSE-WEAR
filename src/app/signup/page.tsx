@@ -38,7 +38,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-[80vh] grid lg:grid-cols-2">
       <div className="flex items-center justify-center px-4 py-10 bg-zinc-50 order-2 lg:order-1">
-        <form onSubmit={onSubmit} className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl p-6 md:p-8 shadow-sm animate-scaleIn" noValidate>
+        <form onSubmit={onSubmit} className="w-full max-w-md bg-white text-black border border-zinc-200 rounded-2xl p-6 md:p-8 shadow-sm animate-scaleIn" noValidate>
           <div className="lg:hidden mb-6"><MuseWearLogo /></div>
           <h2 className="text-2xl font-black tracking-tight">{t("Create account", "إنشاء حساب")}</h2>
           <p className="text-sm text-zinc-500 mt-1">{t("Already have an account?", "لديك حساب؟")} <Link href="/login" className="font-bold text-black underline underline-offset-4 focus:outline-none focus:ring-2 focus:ring-black rounded">{t("Sign in", "تسجيل الدخول")}</Link></p>

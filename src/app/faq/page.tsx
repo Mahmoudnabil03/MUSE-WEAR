@@ -9,7 +9,7 @@ export default function FAQPage() {
           ["Returns?", "14 days, unworn with tags. See Returns policy."],
           ["How to track?", "Use Track Order with order number + phone."],
         ].map(([q,a])=>(
-          <div key={q} className="bg-white border border-zinc-200 p-4 rounded-xl"><div className="font-bold">{q}</div><div className="text-zinc-600 mt-1">{a}</div></div>
+          <div key={q} className="bg-white text-black border border-zinc-200 p-4 rounded-xl"><div className="font-bold">{q}</div><div className="text-zinc-600 mt-1">{a}</div></div>
         ))}
       </div>
     </div>

@@ -190,12 +190,12 @@ export default function AdminPage() {
             ["Multibrand", brandCount.toString()],
             ["Orders Today", "—"],
           ].map(([k, v]) => (
-            <div key={k} className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+            <div key={k} className="bg-white text-black border border-zinc-200 rounded-2xl p-5 shadow-sm">
               <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wide">{k}</div>
               <div className="text-2xl font-black mt-1">{v}</div>
             </div>
           ))}
-          <div className="col-span-2 md:col-span-4 bg-white border border-zinc-200 rounded-2xl p-6 mt-2">
+          <div className="col-span-2 md:col-span-4 bg-white text-black border border-zinc-200 rounded-2xl p-6 mt-2">
             <h3 className="font-bold">How this connects to your factory</h3>
             <p className="text-sm text-zinc-600 mt-1">Tag products with <span className="bg-black text-white px-1.5 py-0.5 text-xs rounded">MUSE Made</span> to surface them. Floating cards update instantly on the storefront.</p>
           </div>
@@ -205,7 +205,7 @@ export default function AdminPage() {
       {tab === "catalog" && (
         <div className="mt-6">
           {/* header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white text-black border border-zinc-200 rounded-2xl p-4 shadow-sm">
             <div>
               <h3 className="font-black text-lg">Products</h3>
               <p className="text-sm text-zinc-500">Floating cards • click to edit • drag to reorder photos</p>
@@ -217,7 +217,7 @@ export default function AdminPage() {
 
           {/* floating cards grid */}
           {displayProducts.length === 0 ? (
-            <div className="mt-8 bg-white border border-dashed border-zinc-300 rounded-2xl p-12 text-center">
+            <div className="mt-8 bg-white text-black border border-dashed border-zinc-300 rounded-2xl p-12 text-center">
               <div className="mx-auto w-14 h-14 rounded-2xl bg-zinc-100 grid place-items-center text-xl">🛍️</div>
               <h4 className="font-bold mt-4">No products yet</h4>
               <p className="text-sm text-zinc-500 mt-1">Add your first product — upload photos, set price in EGP.</p>
@@ -226,7 +226,7 @@ export default function AdminPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-6">
               {displayProducts.map((p) => (
-                <div key={p.id} className="group bg-white rounded-2xl border border-zinc-100 shadow-[0_2px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col">
+                <div key={p.id} className="group bg-white text-black rounded-2xl border border-zinc-100 shadow-[0_2px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col">
                   <div className="aspect-[4/3] bg-zinc-100 relative overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.image} alt={p.nameEn} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
@@ -235,7 +235,7 @@ export default function AdminPage() {
                       {p.isNew && <span className="bg-white text-black text-[10px] font-black px-2.5 py-1 rounded-full shadow">NEW</span>}
                     </div>
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                      <span className="bg-white/90 backdrop-blur text-xs font-bold px-2.5 py-1 rounded-full border">{p.brand}</span>
+                      <span className="bg-white/90 backdrop-blur text-black text-xs font-bold px-2.5 py-1 rounded-full border">{p.brand}</span>
                       <span className="bg-black text-white text-xs font-black px-2.5 py-1 rounded-full">{formatEGP(p.price)}</span>
                     </div>
                   </div>
@@ -253,18 +253,8 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Meta sync card */}
-          <div className="mt-8 bg-white border border-zinc-200 rounded-2xl p-6">
-            <h3 className="font-black">Meta Catalog Sync</h3>
-            <p className="text-sm text-zinc-600 mt-1">Push floating catalog to Facebook & Instagram Shop. Prices in EGP, availability from stock.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button className="bg-black text-white px-5 py-2.5 rounded-full font-bold text-sm">Sync → Meta Catalog</button>
-              <button className="border border-zinc-300 px-5 py-2.5 rounded-full font-bold text-sm">Download CSV</button>
-            </div>
-          </div>
-
           {/* Taager Catalog Sync card */}
-          <div className="mt-8 bg-white border border-zinc-200 rounded-2xl p-6">
+          <div className="mt-8 bg-white text-black border border-zinc-200 rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-black">Taager Catalog Sync</h3>
@@ -296,7 +286,7 @@ export default function AdminPage() {
           {showAdd && (
             <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !saving && setShowAdd(false)} />
-              <div className="relative bg-white w-full sm:max-w-2xl max-h-[92vh] sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col animate-[scaleIn_0.2s_ease]">
+              <div className="relative bg-white text-black w-full sm:max-w-2xl max-h-[92vh] sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col animate-[scaleIn_0.2s_ease]">
                 <div className="px-6 py-5 border-b flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-black">Add Product</h3>
@@ -379,7 +369,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="p-4 border-t bg-zinc-50 flex gap-3">
-                  <button onClick={() => { if (!saving) { setShowAdd(false); resetForm(); } }} disabled={saving} className="flex-1 border border-zinc-300 bg-white rounded-full py-3 font-bold hover:border-black disabled:opacity-50">Cancel</button>
+                  <button onClick={() => { if (!saving) { setShowAdd(false); resetForm(); } }} disabled={saving} className="flex-1 border border-zinc-300 bg-white text-black rounded-full py-3 font-bold hover:border-black disabled:opacity-50">Cancel</button>
                   <button onClick={handleAdd} disabled={saving} className="flex-[1.3] bg-black text-white rounded-full py-3 font-black hover:bg-zinc-800 disabled:opacity-60">{saving ? "Saving…" : "Save Product"}</button>
                 </div>
               </div>
@@ -389,21 +379,21 @@ export default function AdminPage() {
       )}
 
       {tab === "orders" && (
-        <div className="mt-6 bg-white border border-zinc-200 rounded-2xl p-12 text-center text-zinc-500">
+        <div className="mt-6 bg-white text-black border border-zinc-200 rounded-2xl p-12 text-center text-zinc-500">
           Orders • COD vs Paymob • governorate breakdown — connect D1 orders
         </div>
       )}
 
       {tab === "ads" && (
         <div className="mt-6 grid md:grid-cols-2 gap-4">
-          <div className="bg-white border border-zinc-200 rounded-2xl p-6">
+          <div className="bg-white text-black border border-zinc-200 rounded-2xl p-6">
             <h3 className="font-black">Create Campaign</h3>
             <div className="mt-4 space-y-3">
               <input placeholder="Campaign — MUSE Summer Drop" className="w-full border border-zinc-300 rounded-xl px-3 py-3 text-sm" />
               <button className="w-full bg-blue-600 text-white py-3 rounded-full font-bold">Create in Meta Ads Manager</button>
             </div>
           </div>
-          <div className="bg-white border border-zinc-200 rounded-2xl p-6">
+          <div className="bg-white text-black border border-zinc-200 rounded-2xl p-6">
             <h3 className="font-black">Automations</h3>
             <ul className="mt-3 space-y-2 text-sm"><li className="border rounded-xl p-3 flex justify-between">Abandoned cart → IG DM <span className="text-green-600 font-bold">ON</span></li></ul>
           </div>

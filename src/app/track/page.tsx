@@ -30,7 +30,7 @@ export default function TrackPage() {
     <div className="max-w-[600px] mx-auto px-4 mt-6">
       <h1 className="text-2xl font-black">{t("Track Order", "تتبع الطلب")}</h1>
       <p className="text-sm text-zinc-500">{t("Enter order number and phone", "أدخل رقم الطلب والهاتف")}</p>
-      <form onSubmit={onTrack} className="mt-6 bg-white border border-zinc-200 rounded-2xl p-6 space-y-3">
+      <form onSubmit={onTrack} className="mt-6 bg-white text-black border border-zinc-200 rounded-2xl p-6 space-y-3">
         <div>
           <label className="text-xs font-bold">{t("Order Number", "رقم الطلب")} *</label>
           <input value={orderId} onChange={(e)=>setOrderId(e.target.value)} placeholder="MW-..." className="mt-1 w-full border border-zinc-300 rounded-xl px-3 py-3 text-sm focus:border-black focus:outline-none" required />
@@ -44,7 +44,7 @@ export default function TrackPage() {
       </form>
 
       {data && (
-        <div className="mt-6 bg-white border border-zinc-200 rounded-2xl p-6">
+        <div className="mt-6 bg-white text-black border border-zinc-200 rounded-2xl p-6">
           <div className="flex justify-between items-start">
             <div><div className="text-xs text-zinc-500">Order</div><div className="font-black">{String(data.order.id)}</div><div className="text-xs text-zinc-500">{new Date(String(data.order.created_at)).toLocaleDateString()}</div></div>
             <span className="bg-black text-white px-3 py-1 rounded-full text-xs font-bold capitalize">{String(data.order.status).replaceAll("_"," ")}</span>

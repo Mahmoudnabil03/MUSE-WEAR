@@ -36,7 +36,7 @@ export default function AccountPage() {
           ["Wishlist", "رغباتي", "/wishlist", "♡"],
           ...(user.role === "admin" ? [["Admin", "لوحة التحكم", "/admin", "⚙"]] : []),
         ].map(([en, ar, href, icon]) => (
-          <Link key={href} href={href} className="bg-white border border-zinc-200 rounded-2xl p-5 hover:border-black hover-lift transition">
+          <Link key={href} href={href} className="bg-white text-black border border-zinc-200 rounded-2xl p-5 hover:border-black hover-lift transition">
             <div className="text-2xl">{icon}</div>
             <div className="font-black mt-2">{t(en as string, ar as string)}</div>
             <div className="text-xs text-zinc-500">{t("Manage", "إدارة")}</div>
@@ -44,7 +44,7 @@ export default function AccountPage() {
         ))}
       </div>
 
-      <div className="mt-6 bg-white border border-zinc-200 rounded-2xl p-6">
+      <div className="mt-6 bg-white text-black border border-zinc-200 rounded-2xl p-6">
         <h3 className="font-bold">Account Details</h3>
         <div className="mt-3 text-sm space-y-1">
           <div><span className="text-zinc-500">Name:</span> <span className="font-semibold">{user.name}</span></div>
